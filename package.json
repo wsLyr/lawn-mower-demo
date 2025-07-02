@@ -1,0 +1,10 @@
+{
+  "name": "lawn-mower-demo",
+  "uuid": "33ad0ba4-408d-4d56-8077-a23485be2169",
+  "creator": {
+    "version": "3.8.6"
+  },
+  "dependencies": {
+    "@esengine/ecs-framework": "^2.1.24"
+  }
+}
