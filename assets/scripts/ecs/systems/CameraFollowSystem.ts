@@ -1,20 +1,27 @@
 import { EntitySystem, Matcher, Entity } from '@esengine/ecs-framework';
 import { Transform, CameraTarget } from '../components';
-import { Camera } from 'cc';
+import { Camera, Vec3 } from 'cc';
 
 /**
  * 相机跟随系统 - 让相机跟随指定的实体
  */
 export class CameraFollowSystem extends EntitySystem {
     private mainCamera: Camera | null = null;
+    private shakeOffset: Vec3 = new Vec3();
     
     constructor() {
         super(Matcher.empty().all(Transform, CameraTarget));
     }
     
-    /**
-     * 设置要控制的相机
-     */
+    public initialize(): void {
+        super.initialize();
+        this.scene.eventSystem.on('camera:shake:offset', this.onShakeOffset.bind(this));
+    }
+    
+    private onShakeOffset(data: { offset: Vec3 }): void {
+        this.shakeOffset.set(data.offset.x, data.offset.y, data.offset.z);
+    }
+    
     public setCamera(camera: Camera): void {
         this.mainCamera = camera;
     }
@@ -32,11 +39,11 @@ export class CameraFollowSystem extends EntitySystem {
         const transform = target.getComponent(Transform);
         if (!transform) return;
         
-        // 直接跟随目标位置
         const cameraNode = this.mainCamera.node;
+        
         cameraNode.setPosition(
-            transform.position.x,
-            transform.position.y,
+            transform.position.x + this.shakeOffset.x,
+            transform.position.y + this.shakeOffset.y,
             cameraNode.position.z
         );
     }

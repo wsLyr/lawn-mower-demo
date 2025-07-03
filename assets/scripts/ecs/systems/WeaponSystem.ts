@@ -85,6 +85,4 @@ export class WeaponSystem extends EntitySystem {
         collider.setSize(weapon.bulletSize);
         projectile.addComponent(collider);
     }
-    
-
 } 

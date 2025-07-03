@@ -1,6 +1,6 @@
 import { Scene, Core, Time, Entity } from '@esengine/ecs-framework';
-import { Transform, Renderable, Movement, Health, ParticleEffect, Weapon, ColliderComponent, PlayerInput, CameraTarget, EnemySpawner } from '../components';
-import { RenderSystem, MovementSystem, WeaponSystem, ProjectileSystem, CollisionSystem, PlayerInputSystem, AISystem, CameraFollowSystem, HealthSystem, ParticleSystem, EnemySpawnSystem, PhysicsSystem } from '../systems';
+import { Transform, Renderable, Movement, Health, ParticleEffect, Weapon, ColliderComponent, PlayerInput, CameraTarget, EnemySpawner, Collectible, CollectibleType } from '../components';
+import { RenderSystem, MovementSystem, WeaponSystem, ProjectileSystem, AirStrikeSystem, PowerUpSpawner, CollisionSystem, CollectibleSystem, PlayerInputSystem, AISystem, CameraFollowSystem, HealthSystem, ParticleSystem, EnemySpawnSystem, PhysicsSystem, CameraShakeSystem } from '../systems';
 import { director, Node, Color, Vec2, PhysicsSystem2D, Camera, Layers } from 'cc';
 import { ITimer } from '@esengine/ecs-framework';
 import { EntityTags } from '../EntityTags';
@@ -15,6 +15,7 @@ export class GameScene extends Scene {
     private mainCamera: Camera | null = null;
     private renderSystem: RenderSystem | null = null;
     private enemySpawnSystem: EnemySpawnSystem | null = null;
+    private cameraShakeSystem: CameraShakeSystem | null = null;
     
     /**
      * 场景初始化 - ECS框架标准
@@ -31,7 +32,10 @@ export class GameScene extends Scene {
         this.addSystem(new AISystem());
         this.addSystem(new WeaponSystem());
         this.addSystem(new ProjectileSystem());
+        this.addSystem(new AirStrikeSystem());
+        this.addSystem(new PowerUpSpawner());
         this.addSystem(new CollisionSystem());
+        this.addSystem(new CollectibleSystem());
         this.addSystem(new HealthSystem());
         this.addSystem(new ParticleSystem());
         this.addSystem(new CameraFollowSystem());
@@ -42,6 +46,9 @@ export class GameScene extends Scene {
         
         this.enemySpawnSystem = new EnemySpawnSystem();
         this.addSystem(this.enemySpawnSystem);
+        
+        this.cameraShakeSystem = new CameraShakeSystem();
+        this.addSystem(this.cameraShakeSystem);
         
         this.setupSystemDependencies();
         
@@ -141,6 +148,8 @@ export class GameScene extends Scene {
         spawnerEntity.addComponent(spawner);
     }
     
+
+    
     private handlePlayerHit(): void {
         const health = this.playerEntity?.getComponent(Health);
         if (health) {
@@ -150,6 +159,13 @@ export class GameScene extends Scene {
                 
             }
         }
+    }
+    
+    /**
+     * 获取摄像机震动系统
+     */
+    public getCameraShakeSystem(): CameraShakeSystem | null {
+        return this.cameraShakeSystem;
     }
     
     /**
@@ -165,6 +181,7 @@ export class GameScene extends Scene {
         this.mainCamera = null;
         this.renderSystem = null;
         this.enemySpawnSystem = null;
+        this.cameraShakeSystem = null;
         
         super.unload();
     }

@@ -24,7 +24,7 @@ export class Particle {
  */
 export class ParticleEffect extends Component {
     public particles: Particle[] = [];
-    public maxParticles: number = 50;
+    public maxParticles: number = 20;
     public emissionRate: number = 10; // 每秒发射数量
     public emissionTimer: number = 0;
     
@@ -84,7 +84,8 @@ export class ParticleEffect extends Component {
             this.emitterPosition.set(position);
         }
         
-        for (let i = 0; i < count; i++) {
+        const actualCount = Math.min(count, this.maxParticles - this.particles.length);
+        for (let i = 0; i < actualCount; i++) {
             this.createParticle();
         }
     }
@@ -152,46 +153,46 @@ export class ParticleEffect extends Component {
      */
     public static createHitEffect(): ParticleEffect {
         const effect = new ParticleEffect();
-        effect.maxParticles = 20;
-        effect.lifeTime = 0.5;
-        effect.startSize = 3;
+        effect.maxParticles = 8;
+        effect.lifeTime = 0.3;
+        effect.startSize = 2;
         effect.endSize = 0;
         effect.startColor = new Color(255, 100, 100, 255);
         effect.endColor = new Color(255, 100, 100, 0);
-        effect.speed = 80;
-        effect.speedVariation = 40;
-        effect.spread = Math.PI * 2;
-        effect.gravity.set(0, -200);
-        return effect;
-    }
-    
-    public static createDeathExplosion(): ParticleEffect {
-        const effect = new ParticleEffect();
-        effect.maxParticles = 30;
-        effect.lifeTime = 1.0;
-        effect.startSize = 4;
-        effect.endSize = 1;
-        effect.startColor = new Color(255, 150, 0, 255);
-        effect.endColor = new Color(255, 0, 0, 0);
-        effect.speed = 120;
-        effect.speedVariation = 60;
+        effect.speed = 60;
+        effect.speedVariation = 30;
         effect.spread = Math.PI * 2;
         effect.gravity.set(0, -150);
         return effect;
     }
     
+    public static createDeathExplosion(): ParticleEffect {
+        const effect = new ParticleEffect();
+        effect.maxParticles = 12;
+        effect.lifeTime = 0.6;
+        effect.startSize = 3;
+        effect.endSize = 1;
+        effect.startColor = new Color(255, 150, 0, 255);
+        effect.endColor = new Color(255, 0, 0, 0);
+        effect.speed = 80;
+        effect.speedVariation = 40;
+        effect.spread = Math.PI * 2;
+        effect.gravity.set(0, -120);
+        return effect;
+    }
+    
     public static createCollectEffect(): ParticleEffect {
         const effect = new ParticleEffect();
-        effect.maxParticles = 10;
-        effect.lifeTime = 0.8;
+        effect.maxParticles = 6;
+        effect.lifeTime = 0.5;
         effect.startSize = 2;
         effect.endSize = 0;
         effect.startColor = new Color(255, 255, 100, 255);
         effect.endColor = new Color(255, 255, 100, 0);
-        effect.speed = 60;
-        effect.speedVariation = 30;
+        effect.speed = 40;
+        effect.speedVariation = 20;
         effect.spread = Math.PI * 2;
-        effect.gravity.set(0, 50);
+        effect.gravity.set(0, 30);
         return effect;
     }
 } 

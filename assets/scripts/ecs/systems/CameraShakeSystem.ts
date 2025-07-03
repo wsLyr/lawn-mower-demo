@@ -17,8 +17,8 @@ interface ShakeEffect {
  */
 export class CameraShakeSystem extends PassiveSystem {
     private currentShake: ShakeEffect | null = null;
-    private originalCameraPosition: Vec3 = new Vec3();
     private cameraNode: any = null;
+    private shakeOffset: Vec3 = new Vec3();
     
     /**
      * 系统初始化
@@ -26,16 +26,19 @@ export class CameraShakeSystem extends PassiveSystem {
     public initialize(): void {
         super.initialize();
         
-        // 获取摄像机节点
         const scene = director.getScene();
         if (scene) {
             const canvas = scene.getChildByName('Canvas');
             if (canvas) {
-                // 在Cocos Creator中，通常使用Canvas作为根节点
-                this.cameraNode = canvas;
-                this.originalCameraPosition = canvas.position.clone();
+                this.cameraNode = canvas.getChildByName('Camera');
             }
         }
+        
+        this.scene.eventSystem.on('camera:shake', this.onShakeEvent.bind(this));
+    }
+    
+    private onShakeEvent(data: { type: 'light' | 'medium' | 'strong' | 'explosion' }): void {
+        this.customShake(data.type);
     }
     
     /**
@@ -62,15 +65,10 @@ export class CameraShakeSystem extends PassiveSystem {
         
         // 计算震动偏移
         const time = this.currentShake.currentTime * this.currentShake.frequency;
-        const offsetX = Math.sin(time * 1.3) * currentIntensity;
-        const offsetY = Math.cos(time * 1.7) * currentIntensity;
+        this.shakeOffset.x = Math.sin(time * 1.3) * currentIntensity;
+        this.shakeOffset.y = Math.cos(time * 1.7) * currentIntensity;
         
-        // 应用震动
-        this.cameraNode.setPosition(
-            this.originalCameraPosition.x + offsetX,
-            this.originalCameraPosition.y + offsetY,
-            this.originalCameraPosition.z
-        );
+        this.scene.eventSystem.emit('camera:shake:offset', { offset: this.shakeOffset });
     }
     
     /**
@@ -91,41 +89,27 @@ export class CameraShakeSystem extends PassiveSystem {
      */
     public stopShake(): void {
         this.currentShake = null;
-        
-        if (this.cameraNode) {
-            // 平滑回到原位置
-            tween(this.cameraNode)
-                .to(0.1, { position: this.originalCameraPosition })
-                .start();
-        }
+        this.shakeOffset.set(0, 0, 0);
+        this.scene.eventSystem.emit('camera:shake:offset', { offset: this.shakeOffset });
     }
     
     /**
      * 预设震动效果 - 轻微震动（命中敌人）
      */
     public lightShake(): void {
-        this.startShake(2, 0.1, 30, 3);
+        this.startShake(1, 0.05, 30, 4);
     }
     
-    /**
-     * 预设震动效果 - 中等震动（玩家受伤）
-     */
     public mediumShake(): void {
-        this.startShake(5, 0.2, 25, 2);
+        this.startShake(15, 0.25, 25, 2);
     }
     
-    /**
-     * 预设震动效果 - 强烈震动（敌人死亡）
-     */
     public strongShake(): void {
-        this.startShake(8, 0.3, 20, 2);
+        this.startShake(25, 0.4, 20, 2);
     }
     
-    /**
-     * 预设震动效果 - 爆炸震动（大范围效果）
-     */
     public explosionShake(): void {
-        this.startShake(12, 0.5, 15, 1.5);
+        this.startShake(35, 0.6, 15, 1.5);
     }
     
     /**
@@ -164,5 +148,9 @@ export class CameraShakeSystem extends PassiveSystem {
         const progress = this.currentShake.currentTime / this.currentShake.duration;
         const dampening = Math.pow(1 - progress, this.currentShake.dampening);
         return this.currentShake.intensity * dampening;
+    }
+    
+    public getShakeOffset(): Vec3 {
+        return this.shakeOffset;
     }
 } 

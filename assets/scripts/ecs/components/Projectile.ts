@@ -1,19 +1,31 @@
 import { Component } from '@esengine/ecs-framework';
 import { Vec2 } from 'cc';
 
-/**
- * 投射物组件 - 子弹、激光等
- */
+export enum ProjectileType {
+    NORMAL = 'normal',
+    GRENADE = 'grenade'
+}
+
 export class Projectile extends Component {
     public velocity: Vec2 = new Vec2();
     public damage: number = 10;
-    public lifeTime: number = 2; // 存活时间
+    public lifeTime: number = 2;
     public currentLife: number = 2;
-    public pierceCount: number = 1; // 可穿透敌人数量
+    public pierceCount: number = 1;
     public currentPierceCount: number = 1;
     public speed: number = 300;
-    public owner: string = 'player'; // 'player' 或 'enemy'
+    public owner: string = 'player';
     public isActive: boolean = true;
+    public type: ProjectileType = ProjectileType.NORMAL;
+    
+    public explosionRadius: number = 0;
+    public explosionDamage: number = 0;
+    
+    public isParabolic: boolean = false;
+    public startHeight: number = 0;
+    public targetPosition: Vec2 = new Vec2();
+    public arcHeight: number = 50;
+    public travelProgress: number = 0;
     
     constructor(damage: number = 10, speed: number = 300, lifeTime: number = 2) {
         super();
@@ -38,11 +50,21 @@ export class Projectile extends Component {
         return this.currentLife > 0;
     }
     
-    /**
-     * 处理击中目标
-     */
     public onHit(): boolean {
         this.currentPierceCount--;
-        return this.currentPierceCount > 0; // 返回是否还能继续穿透
+        return this.currentPierceCount > 0;
+    }
+    
+    public setAsGrenade(explosionRadius: number = 80, explosionDamage: number = 50): void {
+        this.type = ProjectileType.GRENADE;
+        this.explosionRadius = explosionRadius;
+        this.explosionDamage = explosionDamage;
+        this.pierceCount = 1;
+        this.isParabolic = true;
+        this.arcHeight = 50;
+    }
+    
+    public setTargetPosition(target: Vec2): void {
+        this.targetPosition = target.clone();
     }
 } 
