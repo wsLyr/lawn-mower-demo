@@ -30,7 +30,7 @@ export class SpatialGrid {
     private rows: number;
     private cells: Entity[][];
     
-    constructor(worldWidth: number = 2000, worldHeight: number = 2000, cellSize: number = 100) {
+    constructor(worldWidth: number = 20000, worldHeight: number = 20000, cellSize: number = 100) {
         this.cellSize = cellSize;
         this.worldWidth = worldWidth;
         this.worldHeight = worldHeight;
