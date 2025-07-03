@@ -1,7 +1,8 @@
 import { EntitySystem, Matcher, Time, Entity } from '@esengine/ecs-framework';
 import { Transform, Weapon, Renderable, Projectile, ColliderComponent, Health } from '../components';
 import { RenderSystem } from './RenderSystem';
-import { Color, Vec2, Vec3, ERigidBody2DType } from 'cc';
+import { Color, Vec2, Vec3 } from 'cc';
+import { EntityTags } from '../EntityTags';
 
 /**
  * 武器系统 - 处理自动攻击和子弹生成
@@ -24,69 +25,42 @@ export class WeaponSystem extends EntitySystem {
         const deltaTime = Time.deltaTime;
         
         for (const entity of entities) {
-            const transform = entity.getComponent(Transform);
             const weapon = entity.getComponent(Weapon);
+            const transform = entity.getComponent(Transform);
             
-            if (!transform || !weapon) continue;
+            if (!weapon || !transform) continue;
             
             weapon.updateTimer(deltaTime);
             
             if (weapon.autoFire && weapon.canFire()) {
-                this.fireWeapon(entity, transform, weapon);
-            }
-        }
-    }
-    
-    /**
-     * 开火
-     */
-    private fireWeapon(entity: Entity, transform: Transform, weapon: Weapon): void {
-        const queryResult = this.scene.querySystem.queryAll(Transform);
-        const target = this.findNearestEnemy(transform.position, weapon.range, queryResult.entities);
-        
-        if (target) {
-            const targetTransform = target.getComponent(Transform);
-            if (targetTransform) {
-                const direction = new Vec2(
-                    targetTransform.position.x - transform.position.x,
-                    targetTransform.position.y - transform.position.y
-                );
-                
-                if (direction.length() > 0) {
-                    direction.normalize();
-                    const pos2D = new Vec2(transform.position.x, transform.position.y);
-                    this.createProjectile(pos2D, direction, weapon);
+                const target = this.findNearestTarget(new Vec2(transform.position.x, transform.position.y));
+                if (target) {
+                    const direction = target.clone().subtract(new Vec2(transform.position.x, transform.position.y)).normalize();
+                    this.createProjectile(new Vec2(transform.position.x, transform.position.y), direction, weapon);
                     weapon.resetFireTimer();
                 }
             }
-        } else {
-            console.log('未找到射击目标');
         }
     }
     
-    /**
-     * 寻找最近的敌人
-     */
-    private findNearestEnemy(position: Vec3, range: number, entities: Entity[]): Entity | null {
-        let nearestEnemy = null;
-        let nearestDistance = range;
+    private findNearestTarget(position: Vec2): Vec2 | null {
+        const enemyEntities = this.scene.findEntitiesByTag(EntityTags.ENEMY);
+        let nearestTarget: Vec2 | null = null;
+        let nearestDistance = Infinity;
         
-        entities.forEach(entity => {
-            if (entity && entity.name && entity.name.includes('RedChaser')) {
-                const enemyTransform = entity.getComponent(Transform);
-                if (enemyTransform) {
-                    const pos1 = new Vec2(position.x, position.y);
-                    const pos2 = new Vec2(enemyTransform.position.x, enemyTransform.position.y);
-                    const distance = Vec2.distance(pos1, pos2);
-                    if (distance < nearestDistance) {
-                        nearestDistance = distance;
-                        nearestEnemy = entity;
-                    }
+        for (const entity of enemyEntities) {
+            const transform = entity.getComponent(Transform);
+            if (transform) {
+                const targetPos = new Vec2(transform.position.x, transform.position.y);
+                const distance = Vec2.distance(position, targetPos);
+                if (distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nearestTarget = targetPos;
                 }
             }
-        });
+        }
         
-        return nearestEnemy;
+        return nearestTarget;
     }
     
     /**
@@ -94,32 +68,21 @@ export class WeaponSystem extends EntitySystem {
      */
     private createProjectile(position: Vec2, direction: Vec2, weapon: Weapon): void {
         const projectile = this.scene.createEntity("Bullet");
+        projectile.tag = EntityTags.BULLET;
         
         const transform = new Transform(position.x, position.y, 0);
+        transform.rotation = Math.atan2(direction.y, direction.x);
         projectile.addComponent(transform);
         
-        const projectileComp = new Projectile(weapon.damage, weapon.bulletSpeed, weapon.bulletLifeTime);
-        projectileComp.setDirection(direction);
-        projectileComp.pierceCount = weapon.pierceCount;
-        projectileComp.currentPierceCount = weapon.pierceCount;
-        projectile.addComponent(projectileComp);
+        const projectileComponent = new Projectile(weapon.damage, weapon.bulletSpeed, weapon.bulletLifeTime);
+        projectileComponent.setDirection(direction);
+        projectile.addComponent(projectileComponent);
         
-        const renderData = RenderSystem.createRenderableNode(this.gameContainer);
-        const renderable = new Renderable(renderData.node, renderData.graphics);
-        
-        renderable.shapeType = 'circle';
-        renderable.radius = weapon.bulletSize;
-        renderable.setColor(new Color(255, 255, 100, 255));
-        renderable.strokeColor = new Color(255, 200, 0, 255);
-        renderable.strokeWidth = 1;
-        renderable.enableShadow = false;
-        
+        const renderable = RenderSystem.createBullet();
         projectile.addComponent(renderable);
         
-        const collider = new ColliderComponent(renderData.node, 'circle', 'player_bullet', ERigidBody2DType.Dynamic);
+        const collider = new ColliderComponent('circle');
         collider.setSize(weapon.bulletSize);
-        collider.addTag('player_bullet');
-        
         projectile.addComponent(collider);
     }
     

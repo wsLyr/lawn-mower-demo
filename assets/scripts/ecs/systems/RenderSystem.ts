@@ -1,188 +1,301 @@
-import { EntitySystem, Matcher, Entity, Time } from '@esengine/ecs-framework';
+import { EntitySystem, Entity, Matcher, Time } from '@esengine/ecs-framework';
+import { Node, Sprite, SpriteFrame, resources, ImageAsset, Texture2D, Vec3, Color, Layers } from 'cc';
 import { Transform, Renderable } from '../components';
-import { Node, Graphics, director, Color, tween, Layers } from 'cc';
 
-/**
- * 渲染系统 - 负责Graphics绘制和视觉效果
- */
-export class RenderSystem extends EntitySystem {
+interface SpriteEntity {
+    entity: Entity;
+    sprite: Sprite;
+    node: Node;
+    lastX: number;
+    lastY: number;
+    lastRotation: number;
+    lastScale: number;
+    lastAlpha: number;
+    lastVisible: boolean;
+    lastSpritePath: string;
+    lastColor: Color;
+}
+
+class NodePool {
+    private pool: Node[] = [];
+    private maxSize: number = 100;
     
+    public getNode(entityId: number): Node {
+        let node = this.pool.pop();
+        if (!node) {
+            node = new Node();
+            node.addComponent(Sprite);
+        }
+        node.name = `Entity_${entityId}`;
+        node.active = true;
+        return node;
+    }
+    
+    public releaseNode(node: Node): void {
+        if (this.pool.length < this.maxSize) {
+            node.name = 'PooledNode';
+            node.active = false;
+            node.parent = null;
+            const sprite = node.getComponent(Sprite);
+            if (sprite) {
+                sprite.spriteFrame = null;
+                sprite.color = Color.WHITE;
+            }
+            node.setPosition(0, 0);
+            node.setRotationFromEuler(0, 0, 0);
+            node.setScale(1, 1);
+            this.pool.push(node);
+        } else {
+            node.destroy();
+        }
+    }
+    
+    public preWarm(count: number): void {
+        for (let i = 0; i < count; i++) {
+            const node = new Node();
+            node.addComponent(Sprite);
+            this.releaseNode(node);
+        }
+    }
+    
+    public clear(): void {
+        this.pool.forEach(node => node.destroy());
+        this.pool.length = 0;
+    }
+}
+
+export class RenderSystem extends EntitySystem {
+    private gameContainer: Node | null = null;
+    private spriteEntities: Map<number, SpriteEntity> = new Map();
+    private spriteFrameCache: Map<string, SpriteFrame> = new Map();
+    private loadingPromises: Map<string, Promise<SpriteFrame>> = new Map();
+    private creatingEntities: Set<number> = new Set();
+    private nodePool: NodePool = new NodePool();
+
     constructor() {
         super(Matcher.empty().all(Transform, Renderable));
     }
-    
-    /**
-     * 系统初始化时调用
-     */
-    public initialize(): void {
-        super.initialize();
-    }
-    /**
-     * 处理所有匹配的实体
-     */
-    protected process(entities: Entity[]): void {
-        const deltaTime = Time.deltaTime;
-        
-        for (const entity of entities) {
-            const transform = entity.getComponent(Transform);
-            const renderable = entity.getComponent(Renderable);
-            
-            if (!transform || !renderable) continue;
-            
-            // 更新节点位置
-            if (renderable.node) {
-                renderable.node.setPosition(transform.position.x, transform.position.y, transform.position.z);
-                renderable.node.setRotationFromEuler(0, 0, transform.rotation * 180 / Math.PI);
-                renderable.node.setScale(transform.scale.x, transform.scale.y, transform.scale.z);
-            }
-            
-            // 更新动画效果
-            renderable.updateAnimations(deltaTime);
-            
-            // 绘制图形
-            renderable.draw();
-        }
-    }
-    
 
-    
-    /**
-     * 创建带有Graphics组件的节点
-     */
-    public static createRenderableNode(parent?: Node): { node: Node, graphics: Graphics } {
-        const node = new Node();
-        const graphics = node.addComponent(Graphics);
-        
-        if (parent) {
-            node.parent = parent;
-        } else {
-            const canvas = director.getScene()?.getChildByName('Canvas');
-            if (canvas) {
-                node.parent = canvas;
+    public setGameContainer(container: Node): void {
+        this.gameContainer = container;
+    }
+
+    protected onAdded(entity: Entity): void {
+        const renderable = entity.getComponent(Renderable);
+        if (renderable && !this.creatingEntities.has(entity.id)) {
+            this.creatingEntities.add(entity.id);
+            this.createSpriteEntity(entity);
+        }
+    }
+
+    protected onRemoved(entity: Entity): void {
+        const spriteEntity = this.spriteEntities.get(entity.id);
+        if (spriteEntity) {
+            this.nodePool.releaseNode(spriteEntity.node);
+            this.spriteEntities.delete(entity.id);
+        }
+        this.creatingEntities.delete(entity.id);
+    }
+
+    public onStart(): void {
+        this.nodePool.preWarm(50);
+        this.preloadSprites();
+    }
+
+    public onDestroy(): void {
+        this.spriteEntities.forEach(spriteEntity => {
+            this.nodePool.releaseNode(spriteEntity.node);
+        });
+        this.spriteEntities.clear();
+        this.creatingEntities.clear();
+        this.nodePool.clear();
+    }
+
+    private async preloadSprites(): Promise<void> {
+        const spriteNames = ['player', 'enemy', 'bullet', 'collectible'];
+
+        for (const spriteName of spriteNames) {
+            const path = `images/${spriteName}`;
+            if (!this.spriteFrameCache.has(path)) {
+                await this.loadSpriteFrame(path);
             }
         }
-        
-        node.layer = Layers.Enum.UI_2D;
-        
-        return { node, graphics };
     }
-    
-    /**
-     * 创建角色渲染组件
-     */
-    public static createPlayerRenderable(parent?: Node): Renderable {
-        const { node, graphics } = this.createRenderableNode(parent);
-        const renderable = new Renderable(node, graphics);
-        
-        // 玩家样式
-        renderable.shapeType = 'polygon';
-        renderable.sides = 3; // 三角形
-        renderable.radius = 15;
-        renderable.color = new Color(100, 200, 255, 255); // 蓝色
-        renderable.strokeColor = new Color(255, 255, 255, 255); // 白色边框
-        renderable.strokeWidth = 2;
-        renderable.enableShadow = true;
-        renderable.shadowOffset = { x: 3, y: 3 };
-        renderable.shadowColor = new Color(0, 0, 0, 100);
-        
-        return renderable;
-    }
-    
-    /**
-     * 创建敌人渲染组件
-     */
-    public static createEnemyRenderable(parent?: Node): Renderable {
-        const { node, graphics } = this.createRenderableNode(parent);
-        const renderable = new Renderable(node, graphics);
-        
-        // 敌人样式
-        renderable.shapeType = 'circle';
-        renderable.radius = 12;
-        renderable.color = new Color(255, 100, 100, 255); // 红色
-        renderable.strokeColor = new Color(150, 0, 0, 255); // 深红色边框
-        renderable.strokeWidth = 1;
-        renderable.enableShadow = true;
-        renderable.shadowOffset = { x: 2, y: 2 };
-        renderable.shadowColor = new Color(0, 0, 0, 80);
-        
-        return renderable;
-    }
-    
-    /**
-     * 创建子弹渲染组件
-     */
-    public static createBulletRenderable(parent?: Node): Renderable {
-        const { node, graphics } = this.createRenderableNode(parent);
-        const renderable = new Renderable(node, graphics);
-        
-        // 子弹样式
-        renderable.shapeType = 'circle';
-        renderable.radius = 4;
-        renderable.color = new Color(255, 255, 100, 255); // 黄色
-        renderable.strokeColor = new Color(255, 200, 0, 255); // 橙色边框
-        renderable.strokeWidth = 1;
-        renderable.enableShadow = false; // 子弹不需要阴影
-        
-        return renderable;
-    }
-    
-    /**
-     * 创建收集物渲染组件
-     */
-    public static createCollectibleRenderable(parent?: Node): Renderable {
-        const { node, graphics } = this.createRenderableNode(parent);
-        const renderable = new Renderable(node, graphics);
-        
-        // 收集物样式
-        renderable.shapeType = 'polygon';
-        renderable.sides = 6; // 六边形
-        renderable.radius = 8;
-        renderable.color = new Color(100, 255, 100, 255); // 绿色
-        renderable.strokeColor = new Color(0, 200, 0, 255); // 深绿色边框
-        renderable.strokeWidth = 1;
-        renderable.enableShadow = true;
-        renderable.shadowOffset = { x: 1, y: 1 };
-        renderable.shadowColor = new Color(0, 0, 0, 60);
-        
-        return renderable;
-    }
-    
-    /**
-     * 播放打击效果
-     */
-    public static playHitEffect(renderable: Renderable): void {
-        // 缩放冲击效果
-        renderable.targetScale = 1.3;
-        
-        // 颜色闪烁效果
-        const originalColor = renderable.color.clone();
-        renderable.color = Color.WHITE.clone();
-        
-        // 使用Cocos Creator的tween系统
-        tween(renderable)
-            .delay(0.1)
-            .call(() => {
-                renderable.color = originalColor;
-                renderable.targetScale = 1.0;
-            })
-            .start();
-    }
-    
-    /**
-     * 播放死亡效果
-     */
-    public static playDeathEffect(renderable: Renderable): void {
-        // 缩放消失效果
-        renderable.targetScale = 0;
-        
-        // 透明度渐变
-        tween(renderable)
-            .to(0.3, { alpha: 0 })
-            .call(() => {
-                if (renderable.node) {
-                    renderable.node.destroy();
+
+    private async loadSpriteFrame(path: string): Promise<SpriteFrame> {
+        if (this.spriteFrameCache.has(path)) {
+            return this.spriteFrameCache.get(path)!;
+        }
+
+        if (this.loadingPromises.has(path)) {
+            return this.loadingPromises.get(path)!;
+        }
+
+        const promise = new Promise<SpriteFrame>((resolve, reject) => {
+            resources.load(path, ImageAsset, (err, imageAsset) => {
+                if (err) {
+                    reject(err);
+                    return;
                 }
-            })
-            .start();
+
+                const texture = new Texture2D();
+                texture.image = imageAsset;
+
+                const spriteFrame = new SpriteFrame();
+                spriteFrame.texture = texture;
+
+                this.spriteFrameCache.set(path, spriteFrame);
+                this.loadingPromises.delete(path);
+                resolve(spriteFrame);
+            });
+        });
+
+        this.loadingPromises.set(path, promise);
+        return promise;
+    }
+
+    private async createSpriteEntity(entity: Entity): Promise<void> {
+        if (!this.gameContainer) {
+            this.creatingEntities.delete(entity.id);
+            return;
+        }
+
+        const renderable = entity.getComponent(Renderable);
+        if (!renderable) {
+            this.creatingEntities.delete(entity.id);
+            return;
+        }
+
+        const node = this.nodePool.getNode(entity.id);
+        node.parent = this.gameContainer;
+        node.layer = Layers.Enum.UI_2D;
+
+        const sprite = node.getComponent(Sprite)!;
+
+        const spriteEntity: SpriteEntity = {
+            entity,
+            sprite,
+            node,
+            lastX: 0,
+            lastY: 0,
+            lastRotation: 0,
+            lastScale: 1,
+            lastAlpha: 1,
+            lastVisible: true,
+            lastSpritePath: renderable.spritePath,
+            lastColor: Color.WHITE.clone()
+        };
+
+        this.spriteEntities.set(entity.id, spriteEntity);
+        this.creatingEntities.delete(entity.id);
+
+        try {
+            const spriteFrame = await this.loadSpriteFrame(renderable.spritePath);
+            if (this.spriteEntities.has(entity.id)) {
+                sprite.spriteFrame = spriteFrame;
+            }
+        } catch (error) {
+            console.error("图片加载失败", error);
+        }
+    }
+
+    protected process(entities: Entity[]): void {
+        if (!this.gameContainer) return;
+
+        for (const entity of entities) {
+            const renderable = entity.getComponent(Renderable);
+            if (!renderable) continue;
+
+            this.updateSpriteEntity(entity);
+        }
+    }
+
+    private updateSpriteEntity(entity: Entity): void {
+        const spriteEntity = this.spriteEntities.get(entity.id);
+        if (!spriteEntity) {
+            if (!this.creatingEntities.has(entity.id)) {
+                this.creatingEntities.add(entity.id);
+                this.createSpriteEntity(entity);
+            }
+            return;
+        }
+
+        const transform = entity.getComponent(Transform);
+        const renderable = entity.getComponent(Renderable);
+
+        if (!transform || !renderable) return;
+
+        renderable.updateAnimations(Time.deltaTime);
+
+        const { sprite, node } = spriteEntity;
+
+        if (renderable.spritePath !== spriteEntity.lastSpritePath) {
+            this.loadSpriteFrame(renderable.spritePath).then(spriteFrame => {
+                sprite.spriteFrame = spriteFrame;
+                spriteEntity.lastSpritePath = renderable.spritePath;
+            });
+        }
+
+        const x = transform.position.x;
+        const y = transform.position.y;
+        if (x !== spriteEntity.lastX || y !== spriteEntity.lastY) {
+            node.setPosition(x, y);
+            spriteEntity.lastX = x;
+            spriteEntity.lastY = y;
+        }
+
+        const rotation = transform.rotation;
+        if (rotation !== spriteEntity.lastRotation) {
+            node.setRotationFromEuler(0, 0, rotation * 180 / Math.PI);
+            spriteEntity.lastRotation = rotation;
+        }
+
+        const scale = renderable.currentScale * renderable.scaleMultiplier;
+        if (scale !== spriteEntity.lastScale) {
+            node.setScale(scale, scale);
+            spriteEntity.lastScale = scale;
+        }
+
+        const currentColor = renderable.currentColor;
+        const alpha = renderable.alpha;
+
+        if (currentColor.r !== spriteEntity.lastColor.r ||
+            currentColor.g !== spriteEntity.lastColor.g ||
+            currentColor.b !== spriteEntity.lastColor.b ||
+            alpha !== spriteEntity.lastAlpha) {
+
+            sprite.color = new Color(currentColor.r, currentColor.g, currentColor.b, Math.floor(alpha * 255));
+            spriteEntity.lastColor.set(currentColor);
+            spriteEntity.lastAlpha = alpha;
+        }
+
+        if (renderable.visible !== spriteEntity.lastVisible) {
+            node.active = renderable.visible;
+            spriteEntity.lastVisible = renderable.visible;
+        }
+    }
+
+    public static createPlayer(): Renderable {
+        const renderable = new Renderable();
+        renderable.setSprite('images/player');
+        return renderable;
+    }
+
+    public static createEnemy(): Renderable {
+        const renderable = new Renderable();
+        renderable.setSprite('images/enemy');
+        return renderable;
+    }
+
+    public static createBullet(): Renderable {
+        const renderable = new Renderable();
+        renderable.setSprite('images/bullet');
+        return renderable;
+    }
+
+    public static createCollectible(): Renderable {
+        const renderable = new Renderable();
+        renderable.setSprite('images/collectible');
+        return renderable;
     }
 } 

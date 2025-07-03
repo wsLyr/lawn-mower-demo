@@ -1,18 +1,6 @@
-import { EntitySystem, Matcher, Entity, Component } from '@esengine/ecs-framework';
-import { Transform } from '../components';
+import { EntitySystem, Matcher, Entity } from '@esengine/ecs-framework';
+import { Transform, CameraTarget } from '../components';
 import { Camera } from 'cc';
-
-/**
- * 相机目标组件 - 标记相机应该跟随的实体
- */
-export class CameraTarget extends Component {
-    public priority: number = 0; // 优先级，数值越高优先级越高
-    
-    constructor(priority: number = 0) {
-        super();
-        this.priority = priority;
-    }
-}
 
 /**
  * 相机跟随系统 - 让相机跟随指定的实体

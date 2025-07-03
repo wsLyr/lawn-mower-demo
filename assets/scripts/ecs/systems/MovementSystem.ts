@@ -3,6 +3,9 @@ import { Transform, Movement } from '../components';
 import { Vec2 } from 'cc';
 
 export class MovementSystem extends EntitySystem {
+    private readonly tempVec2 = new Vec2();
+    private readonly MOVEMENT_THRESHOLD = 0.1;
+    private readonly ROTATION_THRESHOLD = 0.001;
     
     constructor() {
         super(Matcher.empty().all(Transform, Movement));
@@ -22,34 +25,36 @@ export class MovementSystem extends EntitySystem {
         
         if (!transform || !movement) return;
         
-        transform.previousPosition.set(transform.position);
+        const inputDirLen = movement.inputDirection.x * movement.inputDirection.x + 
+                           movement.inputDirection.y * movement.inputDirection.y;
         
-        if (movement.inputDirection.length() > 0.1) {
-            const normalizedDirection = movement.inputDirection.clone().normalize();
+        if (inputDirLen > this.MOVEMENT_THRESHOLD * this.MOVEMENT_THRESHOLD) {
+            const invLen = 1 / Math.sqrt(inputDirLen);
+            const normalizedX = movement.inputDirection.x * invLen;
+            const normalizedY = movement.inputDirection.y * invLen;
+            
             const moveDistance = movement.maxSpeed * deltaTime;
             
-            transform.position.x += normalizedDirection.x * moveDistance;
-            transform.position.y += normalizedDirection.y * moveDistance;
+            transform.previousPosition.set(transform.position);
+            transform.position.x += normalizedX * moveDistance;
+            transform.position.y += normalizedY * moveDistance;
             
-            movement.velocity.set(normalizedDirection.x * movement.maxSpeed, normalizedDirection.y * movement.maxSpeed);
+            movement.velocity.set(normalizedX * movement.maxSpeed, normalizedY * movement.maxSpeed);
+            
+            const velocityLen = movement.velocity.x * movement.velocity.x + movement.velocity.y * movement.velocity.y;
+            if (velocityLen > 100) {
+                const targetRotation = Math.atan2(movement.velocity.y, movement.velocity.x);
+                
+                let angleDiff = targetRotation - transform.rotation;
+                if (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                else if (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                
+                if (Math.abs(angleDiff) > this.ROTATION_THRESHOLD) {
+                    transform.rotation += angleDiff * 8 * deltaTime;
+                }
+            }
         } else {
             movement.velocity.set(0, 0);
-        }
-        
-        this.updateRotation(transform, movement, deltaTime);
-    }
-    
-    private updateRotation(transform: Transform, movement: Movement, deltaTime: number): void {
-        if (movement.velocity.length() > 10) {
-            const targetRotation = Math.atan2(movement.velocity.y, movement.velocity.x);
-            
-            let angleDiff = targetRotation - transform.rotation;
-            
-            while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
-            while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-            
-            const rotationSpeed = 8;
-            transform.rotation += angleDiff * rotationSpeed * deltaTime;
         }
     }
 } 

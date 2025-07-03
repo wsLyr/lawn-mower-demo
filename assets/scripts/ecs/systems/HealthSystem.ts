@@ -37,16 +37,14 @@ export class HealthSystem extends EntitySystem {
             // 受击时的闪烁效果 - 红色闪光
             const flashIntensity = Math.sin(health.hitEffectTimer * 30) * 0.5 + 0.5;
             const flashColor = new Color(255, 255 * flashIntensity, 255 * flashIntensity, 255);
-            renderable.setColorLerp(flashColor, 0.3);
+            renderable.lerpToColor(flashColor);
             
             // 轻微的缩放效果
-            const scaleIntensity = 1 + Math.sin(health.hitEffectTimer * 25) * 0.15;
-            renderable.punchScale(scaleIntensity, 0.05);
+            const scaleAmount = 0.15 * Math.sin(health.hitEffectTimer * 25);
+            renderable.punchScale(1 + scaleAmount, 0.05);
         } else {
             // 恢复正常颜色
-            if (renderable.color.r > renderable.originalColor.r + 10) {
-                renderable.setColorLerp(renderable.originalColor, 0.3);
-            }
+            renderable.lerpToColor(Color.WHITE);
         }
     }
 

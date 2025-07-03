@@ -28,7 +28,6 @@ export class ProjectileSystem extends EntitySystem {
             
             // 更新生命周期
             if (!projectile.updateLife(deltaTime)) {
-                // 子弹超时，销毁
                 entity.destroy();
             }
         }
