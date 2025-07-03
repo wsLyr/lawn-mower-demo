@@ -138,7 +138,7 @@ export class PhysicsWorld {
                 if (entity === other) continue;
                 
                 const otherLayer = this.getEntityLayer(other);
-                if (!otherLayer || !allowedLayers.includes(otherLayer)) continue;
+                if (!otherLayer || allowedLayers.indexOf(otherLayer) === -1) continue;
                 
                 const pairKey = this.getPairKey(entity, other);
                 if (processedPairs.has(pairKey)) continue;
