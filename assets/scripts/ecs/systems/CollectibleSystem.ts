@@ -9,7 +9,7 @@ export class CollectibleSystem extends EntitySystem {
     private physicsWorld: PhysicsWorld;
     
     constructor() {
-        super(Matcher.empty().all(Transform, ColliderComponent, Collectible));
+        super(Matcher.all(Transform, ColliderComponent, Collectible));
         this.physicsWorld = new PhysicsWorld();
     }
     

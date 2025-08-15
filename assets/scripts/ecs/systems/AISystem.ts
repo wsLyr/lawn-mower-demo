@@ -23,7 +23,7 @@ export class AIComponent extends Component {
 export class AISystem extends EntitySystem {
     
     constructor() {
-        super(Matcher.empty().all(Transform, Movement, AIComponent));
+        super(Matcher.all(Transform, Movement, AIComponent));
     }
     
     /**

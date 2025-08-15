@@ -9,7 +9,7 @@ export * from './AirStrikeSystem';
 export * from './PowerUpSpawner';
 export * from './HealthSystem';
 export * from './AISystem';
-export * from './ParticleSystem';
+export * from './VectorizedParticleSystem';
 export * from './CameraFollowSystem';
 export * from './CameraShakeSystem';
 export * from './EnemySpawnSystem';

@@ -1,6 +1,6 @@
 import { EntitySystem, Entity, Matcher, Time, ECSSystem } from '@esengine/ecs-framework';
-import { Node, Sprite, SpriteFrame, resources, ImageAsset, Texture2D, Vec3, Color, Layers, Graphics } from 'cc';
-import { Transform, Renderable, ParticleEffect } from '../components';
+import { Node, Sprite, SpriteFrame, resources, ImageAsset, Texture2D, Vec3, Color, Layers } from 'cc';
+import { Transform, Renderable } from '../components';
 
 interface SpriteEntity {
     entity: Entity;
@@ -16,11 +16,6 @@ interface SpriteEntity {
     lastColor: Color;
 }
 
-interface ParticleEntity {
-    entity: Entity;
-    graphics: Graphics;
-    node: Node;
-}
 
 class NodePool {
     private pool: Node[] = [];
@@ -70,80 +65,47 @@ class NodePool {
     }
 }
 
-class ParticleNodePool {
-    private pool: Node[] = [];
-    private maxSize: number = 50;
-    
-    public getNode(entityId: number): Node {
-        let node = this.pool.pop();
-        if (!node) {
-            node = new Node();
-            node.addComponent(Graphics);
-        }
-        node.name = `Particles_${entityId}`;
-        node.active = true;
-        return node;
-    }
-    
-    public releaseNode(node: Node): void {
-        if (this.pool.length < this.maxSize) {
-            node.name = 'PooledParticleNode';
-            node.active = false;
-            node.parent = null;
-            const graphics = node.getComponent(Graphics);
-            if (graphics) {
-                graphics.clear();
-            }
-            this.pool.push(node);
-        } else {
-            node.destroy();
-        }
-    }
-    
-    public preWarm(count: number): void {
-        for (let i = 0; i < count; i++) {
-            const node = new Node();
-            node.addComponent(Graphics);
-            this.releaseNode(node);
-        }
-    }
-    
-    public clear(): void {
-        this.pool.forEach(node => node.destroy());
-        this.pool.length = 0;
-    }
-}
 
 @ECSSystem('RenderSystem')
 export class RenderSystem extends EntitySystem {
     private gameContainer: Node | null = null;
+    private backgroundLayer: Node | null = null;
+    private gameObjectLayer: Node | null = null;
+    private uiLayer: Node | null = null;
     private spriteEntities: Map<number, SpriteEntity> = new Map();
-    private particleEntities: Map<number, ParticleEntity> = new Map();
     private spriteFrameCache: Map<string, SpriteFrame> = new Map();
     private loadingPromises: Map<string, Promise<SpriteFrame>> = new Map();
     private creatingEntities: Set<number> = new Set();
     private nodePool: NodePool = new NodePool();
-    private particleNodePool: ParticleNodePool = new ParticleNodePool();
 
     constructor() {
-        super(Matcher.empty().one(Renderable, ParticleEffect).all(Transform));
+        super(Matcher.all(Renderable, Transform));
     }
 
     public setGameContainer(container: Node): void {
         this.gameContainer = container;
+        this.initializeLayers();
+    }
+    
+    private initializeLayers(): void {
+        if (!this.gameContainer) return;
+        
+        this.backgroundLayer = new Node('BackgroundLayer');
+        this.backgroundLayer.parent = this.gameContainer;
+        
+        this.gameObjectLayer = new Node('GameObjectLayer');
+        this.gameObjectLayer.parent = this.gameContainer;
+        
+        this.uiLayer = new Node('UILayer');
+        this.uiLayer.parent = this.gameContainer;
     }
 
     protected onAdded(entity: Entity): void {
         const renderable = entity.getComponent(Renderable);
-        const particleEffect = entity.getComponent(ParticleEffect);
         
         if (renderable && !this.creatingEntities.has(entity.id)) {
             this.creatingEntities.add(entity.id);
             this.createSpriteEntity(entity);
-        }
-        
-        if (particleEffect && !this.particleEntities.has(entity.id)) {
-            this.createParticleEntity(entity);
         }
     }
 
@@ -154,18 +116,11 @@ export class RenderSystem extends EntitySystem {
             this.spriteEntities.delete(entity.id);
         }
         
-        const particleEntity = this.particleEntities.get(entity.id);
-        if (particleEntity) {
-            this.particleNodePool.releaseNode(particleEntity.node);
-            this.particleEntities.delete(entity.id);
-        }
-        
         this.creatingEntities.delete(entity.id);
     }
 
     public onStart(): void {
         this.nodePool.preWarm(50);
-        this.particleNodePool.preWarm(30);
         this.preloadSprites();
     }
 
@@ -175,14 +130,8 @@ export class RenderSystem extends EntitySystem {
         });
         this.spriteEntities.clear();
         
-        this.particleEntities.forEach(particleEntity => {
-            this.particleNodePool.releaseNode(particleEntity.node);
-        });
-        this.particleEntities.clear();
-        
         this.creatingEntities.clear();
         this.nodePool.clear();
-        this.particleNodePool.clear();
     }
 
     private async preloadSprites(): Promise<void> {
@@ -229,7 +178,7 @@ export class RenderSystem extends EntitySystem {
     }
 
     private async createSpriteEntity(entity: Entity): Promise<void> {
-        if (!this.gameContainer) {
+        if (!this.gameObjectLayer) {
             this.creatingEntities.delete(entity.id);
             return;
         }
@@ -241,7 +190,7 @@ export class RenderSystem extends EntitySystem {
         }
 
         const node = this.nodePool.getNode(entity.id);
-        node.parent = this.gameContainer;
+        node.parent = this.gameObjectLayer;
         node.layer = Layers.Enum.UI_2D;
 
         const sprite = node.getComponent(Sprite)!;
@@ -273,37 +222,15 @@ export class RenderSystem extends EntitySystem {
         }
     }
 
-    private createParticleEntity(entity: Entity): void {
-        if (!this.gameContainer) return;
-
-        const node = this.particleNodePool.getNode(entity.id);
-        node.parent = this.gameContainer;
-        node.layer = Layers.Enum.UI_2D;
-
-        const graphics = node.getComponent(Graphics)!;
-
-        const particleEntity: ParticleEntity = {
-            entity,
-            graphics,
-            node
-        };
-
-        this.particleEntities.set(entity.id, particleEntity);
-    }
 
     protected process(entities: Entity[]): void {
         if (!this.gameContainer) return;
 
         for (const entity of entities) {
             const renderable = entity.getComponent(Renderable);
-            const particleEffect = entity.getComponent(ParticleEffect);
             
             if (renderable) {
                 this.updateSpriteEntity(entity);
-            }
-            
-            if (particleEffect) {
-                this.updateParticleEntity(entity);
             }
         }
     }
@@ -373,24 +300,6 @@ export class RenderSystem extends EntitySystem {
         }
     }
 
-    private updateParticleEntity(entity: Entity): void {
-        const particleEntity = this.particleEntities.get(entity.id);
-        if (!particleEntity) return;
-
-        const particleEffect = entity.getComponent(ParticleEffect);
-        if (!particleEffect || particleEffect.particles.length === 0) return;
-
-        const { graphics } = particleEntity;
-        
-        graphics.clear();
-        
-        for (let i = 0; i < particleEffect.particles.length; i++) {
-            const particle = particleEffect.particles[i];
-            graphics.fillColor = particle.color;
-            graphics.circle(particle.position.x, particle.position.y, particle.size);
-            graphics.fill();
-        }
-    }
 
     public static createPlayer(): Renderable {
         const renderable = new Renderable();

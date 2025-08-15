@@ -9,7 +9,7 @@ import { Color } from 'cc';
 export class HealthSystem extends EntitySystem {
     
     constructor() {
-        super(Matcher.empty().all(Health));
+        super(Matcher.all(Health));
     }
     
     protected process(entities: Entity[]): void {

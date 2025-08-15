@@ -9,7 +9,7 @@ export class MovementSystem extends EntitySystem {
     private readonly ROTATION_THRESHOLD = 0.001;
     
     constructor() {
-        super(Matcher.empty().all(Transform, Movement));
+        super(Matcher.all(Transform, Movement));
     }
     
     protected process(entities: Entity[]): void {

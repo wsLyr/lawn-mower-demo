@@ -1,6 +1,6 @@
 import { Scene, Core, Time, Entity } from '@esengine/ecs-framework';
 import { Transform, Renderable, Movement, Health, ParticleEffect, Weapon, ColliderComponent, PlayerInput, CameraTarget, EnemySpawner, Collectible, CollectibleType } from '../components';
-import { RenderSystem, MovementSystem, WeaponSystem, ProjectileSystem, AirStrikeSystem, PowerUpSpawner, CollisionSystem, CollectibleSystem, PlayerInputSystem, AISystem, CameraFollowSystem, HealthSystem, ParticleSystem, EnemySpawnSystem, PhysicsSystem, CameraShakeSystem } from '../systems';
+import { RenderSystem, MovementSystem, WeaponSystem, ProjectileSystem, AirStrikeSystem, PowerUpSpawner, CollisionSystem, CollectibleSystem, PlayerInputSystem, AISystem, CameraFollowSystem, HealthSystem, VectorizedParticleSystem, EnemySpawnSystem, PhysicsSystem, CameraShakeSystem } from '../systems';
 import { director, Node, Color, Vec2, PhysicsSystem2D, Camera, Layers } from 'cc';
 import { ITimer } from '@esengine/ecs-framework';
 import { EntityTags } from '../EntityTags';
@@ -14,6 +14,7 @@ export class GameScene extends Scene {
     private gameContainer: Node = null;
     private mainCamera: Camera | null = null;
     private renderSystem: RenderSystem | null = null;
+    private vectorizedParticleSystem: VectorizedParticleSystem | null = null;
     private enemySpawnSystem: EnemySpawnSystem | null = null;
     private cameraShakeSystem: CameraShakeSystem | null = null;
     
@@ -37,7 +38,10 @@ export class GameScene extends Scene {
         this.addEntityProcessor(new CollisionSystem());
         this.addEntityProcessor(new CollectibleSystem());
         this.addEntityProcessor(new HealthSystem());
-        this.addEntityProcessor(new ParticleSystem());
+
+        this.vectorizedParticleSystem = new VectorizedParticleSystem();
+        this.addEntityProcessor(this.vectorizedParticleSystem);
+        
         this.addEntityProcessor(new CameraFollowSystem());
         this.addEntityProcessor(new PhysicsSystem());
         
@@ -90,6 +94,10 @@ export class GameScene extends Scene {
             const weaponSystem = this.getEntityProcessor(WeaponSystem);
             if (weaponSystem) {
                 weaponSystem.setGameContainer(this.gameContainer);
+            }
+            
+            if (this.vectorizedParticleSystem) {
+                this.vectorizedParticleSystem.setGameContainer(this.gameContainer);
             }
         }
         
@@ -180,6 +188,7 @@ export class GameScene extends Scene {
         this.playerEntity = null;
         this.mainCamera = null;
         this.renderSystem = null;
+        this.vectorizedParticleSystem = null;
         this.enemySpawnSystem = null;
         this.cameraShakeSystem = null;
         

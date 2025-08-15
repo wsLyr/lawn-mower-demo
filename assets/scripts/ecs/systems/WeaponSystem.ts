@@ -12,7 +12,7 @@ export class WeaponSystem extends EntitySystem {
     private gameContainer: any = null;
     
     constructor() {
-        super(Matcher.empty().all(Transform, Weapon));
+        super(Matcher.all(Transform, Weapon));
     }
     
     public setGameContainer(container: any): void {

@@ -11,7 +11,7 @@ export class PowerUpSpawner extends EntitySystem {
     private spawnRadius: number = 200;
     
     constructor() {
-        super(Matcher.empty());
+        super(Matcher.complex());
     }
     
     protected process(): void {

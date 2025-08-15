@@ -8,7 +8,7 @@ import { Transform, Projectile } from '../components';
 export class ProjectileSystem extends EntitySystem {
     
     constructor() {
-        super(Matcher.empty().all(Transform, Projectile));
+        super(Matcher.all(Transform, Projectile));
     }
     
     /**

@@ -17,7 +17,7 @@ export class PlayerInputSystem extends EntitySystem {
     };
     
     constructor() {
-        super(Matcher.empty().all(Transform, Movement, PlayerInput));
+        super(Matcher.all(Transform, Movement, PlayerInput));
         this.setupInputHandling();
     }
     

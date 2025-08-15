@@ -19,7 +19,7 @@ export class PhysicsSystem extends EntitySystem {
     };
     
     constructor() {
-        super(Matcher.empty().all(Transform, RigidBody));
+        super(Matcher.all(Transform, RigidBody));
     }
     
     protected process(entities: Entity[]): void {

@@ -24,9 +24,7 @@ export class CameraShakeSystem extends PassiveSystem {
     /**
      * 系统初始化
      */
-    public initialize(): void {
-        super.initialize();
-        
+    protected onInitialize(): void {
         const scene = director.getScene();
         if (scene) {
             const canvas = scene.getChildByName('Canvas');

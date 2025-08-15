@@ -17,8 +17,7 @@ export class AirStrikeSystem extends PassiveSystem {
     private strikeRadius: number = 300;
     private missilesLaunched: boolean = false;
     
-    public initialize(): void {
-        super.initialize();
+    protected onInitialize(): void {
         this.scene.eventSystem.on('airstrike:activate', this.activateAirStrike.bind(this));
     }
     

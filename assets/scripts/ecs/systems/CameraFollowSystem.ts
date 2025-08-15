@@ -11,11 +11,10 @@ export class CameraFollowSystem extends EntitySystem {
     private shakeOffset: Vec3 = new Vec3();
     
     constructor() {
-        super(Matcher.empty().all(Transform, CameraTarget));
+        super(Matcher.all(Transform, CameraTarget));
     }
     
-    public initialize(): void {
-        super.initialize();
+    protected onInitialize(): void {
         this.scene.eventSystem.on('camera:shake:offset', this.onShakeOffset.bind(this));
     }
     

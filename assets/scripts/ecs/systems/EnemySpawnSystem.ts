@@ -14,7 +14,7 @@ export class EnemySpawnSystem extends EntitySystem {
     private static readonly MAX_ENEMIES = 1000;
     
     constructor() {
-        super(Matcher.empty().all(EnemySpawner));
+        super(Matcher.all(EnemySpawner));
     }
     
     protected process(entities: Entity[]): void {

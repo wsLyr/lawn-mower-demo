@@ -9,12 +9,11 @@ export class CollisionSystem extends EntitySystem {
     private physicsWorld: PhysicsWorld;
     
     constructor() {
-        super(Matcher.empty().all(Transform, ColliderComponent));
+        super(Matcher.all(Transform, ColliderComponent));
         this.physicsWorld = new PhysicsWorld();
     }
     
-    public initialize(): void {
-        super.initialize();
+    protected onInitialize(): void {
         this.scene.eventSystem.on('grenade:explode', this.onGrenadeExplode.bind(this));
     }
     

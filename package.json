@@ -5,6 +5,6 @@
     "version": "3.8.6"
   },
   "dependencies": {
-    "@esengine/ecs-framework": "^2.1.43"
+    "@esengine/ecs-framework": "^2.1.44"
   }
 }
