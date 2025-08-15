@@ -1,10 +1,11 @@
-import { EntitySystem, Matcher, Entity } from '@esengine/ecs-framework';
+import { EntitySystem, Matcher, Entity, ECSSystem } from '@esengine/ecs-framework';
 import { Transform, CameraTarget } from '../components';
 import { Camera, Vec3 } from 'cc';
 
 /**
  * 相机跟随系统 - 让相机跟随指定的实体
  */
+@ECSSystem('CameraFollowSystem')
 export class CameraFollowSystem extends EntitySystem {
     private mainCamera: Camera | null = null;
     private shakeOffset: Vec3 = new Vec3();

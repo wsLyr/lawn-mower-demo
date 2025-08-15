@@ -1,9 +1,10 @@
-import { Component } from '@esengine/ecs-framework';
+import { Component, ECSComponent } from '@esengine/ecs-framework';
 import { Vec3, Vec2 } from 'cc';
 
 /**
  * 变换组件 - 存储实体的位置、旋转、缩放信息
  */
+@ECSComponent('Transform')
 export class Transform extends Component {
     public position: Vec3 = new Vec3();
     public rotation: number = 0; // 旋转角度（弧度）

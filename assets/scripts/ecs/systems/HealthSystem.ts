@@ -1,10 +1,11 @@
-import { EntitySystem, Matcher, Entity, Time } from '@esengine/ecs-framework';
+import { EntitySystem, Matcher, Entity, Time, ECSSystem } from '@esengine/ecs-framework';
 import { Health, Renderable } from '../components';
 import { Color } from 'cc';
 
 /**
  * 血量系统 - 处理血量相关逻辑
  */
+@ECSSystem('HealthSystem')
 export class HealthSystem extends EntitySystem {
     
     constructor() {

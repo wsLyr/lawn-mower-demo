@@ -1,8 +1,9 @@
-import { Component } from '@esengine/ecs-framework';
+import { Component, ECSComponent } from '@esengine/ecs-framework';
 
 /**
  * 血量组件 - 管理实体的生命值
  */
+@ECSComponent('Health')
 export class Health extends Component {
     public current: number;
     public max: number;

@@ -1,10 +1,11 @@
-import { EntitySystem, Matcher, Entity } from '@esengine/ecs-framework';
+import { EntitySystem, Matcher, Entity, ECSSystem } from '@esengine/ecs-framework';
 import { Transform, Movement, PlayerInput } from '../components';
 import { input, Input, EventKeyboard, KeyCode } from 'cc';
 
 /**
  * 玩家输入系统 - 处理键盘输入并控制玩家移动
  */
+@ECSSystem('PlayerInputSystem')
 export class PlayerInputSystem extends EntitySystem {
     
     // 输入状态

@@ -1,9 +1,10 @@
-import { EntitySystem, Matcher, Entity } from '@esengine/ecs-framework';
+import { EntitySystem, Matcher, Entity, ECSSystem } from '@esengine/ecs-framework';
 import { Transform, ColliderComponent, Collectible, CollectibleType, Weapon } from '../components';
 import { PhysicsWorld, CollisionPair } from '../PhysicsWorld';
 import { EntityTags } from '../EntityTags';
 import { Vec2 } from 'cc';
 
+@ECSSystem('CollectibleSystem')
 export class CollectibleSystem extends EntitySystem {
     private physicsWorld: PhysicsWorld;
     

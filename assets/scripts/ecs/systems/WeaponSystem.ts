@@ -1,4 +1,4 @@
-import { EntitySystem, Matcher, Time, Entity } from '@esengine/ecs-framework';
+import { EntitySystem, Matcher, Time, Entity, ECSSystem } from '@esengine/ecs-framework';
 import { Transform, Weapon, Renderable, Projectile, ColliderComponent, Health } from '../components';
 import { RenderSystem } from './RenderSystem';
 import { Color, Vec2, Vec3 } from 'cc';
@@ -7,6 +7,7 @@ import { EntityTags } from '../EntityTags';
 /**
  * 武器系统 - 处理自动攻击和子弹生成
  */
+@ECSSystem('WeaponSystem')
 export class WeaponSystem extends EntitySystem {
     private gameContainer: any = null;
     

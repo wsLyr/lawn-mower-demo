@@ -1,4 +1,4 @@
-import { EntitySystem, Entity, Matcher, Time } from '@esengine/ecs-framework';
+import { EntitySystem, Entity, Matcher, Time, ECSSystem } from '@esengine/ecs-framework';
 import { Transform, Health, Movement, DamageCooldown } from '../components';
 import { EnemySpawner } from '../components/EnemySpawner';
 import { AIComponent } from '../systems/AISystem';
@@ -9,6 +9,7 @@ import { EntityTags } from '../EntityTags';
 /**
  * 敌人生成系统
  */
+@ECSSystem('EnemySpawnSystem')
 export class EnemySpawnSystem extends EntitySystem {
     private static readonly MAX_ENEMIES = 1000;
     

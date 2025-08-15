@@ -43,7 +43,7 @@ export class ECSManager extends Component {
             }
             
             const gameScene = new GameScene();
-            Core.scene = gameScene;
+            Core.setScene(gameScene);
             
             this.isInitialized = true;
             

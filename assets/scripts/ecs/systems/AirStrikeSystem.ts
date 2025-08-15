@@ -1,9 +1,10 @@
-import { PassiveSystem, Time, Entity } from '@esengine/ecs-framework';
+import { PassiveSystem, Time, Entity, ECSSystem } from '@esengine/ecs-framework';
 import { Transform, ExplosionWarning, Health, ParticleEffect } from '../components';
 import { RenderSystem } from './RenderSystem';
 import { EntityTags } from '../EntityTags';
 import { Vec2 } from 'cc';
 
+@ECSSystem('AirStrikeSystem')
 export class AirStrikeSystem extends PassiveSystem {
     private isActive: boolean = false;
     private strikeTargets: Vec2[] = [];

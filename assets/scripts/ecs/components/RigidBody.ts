@@ -1,6 +1,7 @@
-import { Component } from '@esengine/ecs-framework';
+import { Component, ECSComponent } from '@esengine/ecs-framework';
 import { Vec2 } from 'cc';
 
+@ECSComponent('RigidBody')
 export class RigidBody extends Component {
     public velocity: Vec2 = new Vec2();
     public acceleration: Vec2 = new Vec2();

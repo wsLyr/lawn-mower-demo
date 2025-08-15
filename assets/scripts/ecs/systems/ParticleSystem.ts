@@ -1,10 +1,11 @@
-import { EntitySystem, Matcher, Entity, Time } from '@esengine/ecs-framework';
+import { EntitySystem, Matcher, Entity, Time, ECSSystem } from '@esengine/ecs-framework';
 import { Transform, ParticleEffect, Particle } from '../components';
 import { Vec2 } from 'cc';
 
 /**
  * 粒子系统 - 处理粒子效果的更新和渲染
  */
+@ECSSystem('ParticleSystem')
 export class ParticleSystem extends EntitySystem {
     
     constructor() {

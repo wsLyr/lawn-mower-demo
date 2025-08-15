@@ -1,8 +1,9 @@
-import { Component } from '@esengine/ecs-framework';
+import { Component, ECSComponent } from '@esengine/ecs-framework';
 
 /**
  * AI组件 - 定义AI行为类型和参数
  */
+@ECSComponent('AIComponent')
 export class AIComponent extends Component {
     public behaviorType: string; // AI行为类型
     public targetTag: string; // 目标标签

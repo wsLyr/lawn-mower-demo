@@ -1,9 +1,10 @@
-import { Component } from '@esengine/ecs-framework';
+import { Component, ECSComponent } from '@esengine/ecs-framework';
 
 export enum CollectibleType {
     AIR_STRIKE = 'air_strike'
 }
 
+@ECSComponent('Collectible')
 export class Collectible extends Component {
     public type: CollectibleType;
     public value: number = 1;

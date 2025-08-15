@@ -1,9 +1,10 @@
-import { EntitySystem, Matcher, Time, Entity } from '@esengine/ecs-framework';
+import { EntitySystem, Matcher, Time, Entity, ECSSystem } from '@esengine/ecs-framework';
 import { Transform, Projectile } from '../components';
 
 /**
  * 投射物系统 - 处理子弹移动和生命周期
  */
+@ECSSystem('ProjectileSystem')
 export class ProjectileSystem extends EntitySystem {
     
     constructor() {

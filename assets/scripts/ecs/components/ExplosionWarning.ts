@@ -1,5 +1,6 @@
-import { Component } from '@esengine/ecs-framework';
+import { Component, ECSComponent } from '@esengine/ecs-framework';
 
+@ECSComponent('ExplosionWarning')
 export class ExplosionWarning extends Component {
     public radius: number = 80;
     public warningTime: number = 1.0;

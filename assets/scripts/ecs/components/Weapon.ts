@@ -1,6 +1,7 @@
-import { Component } from '@esengine/ecs-framework';
+import { Component, ECSComponent } from '@esengine/ecs-framework';
 import { Vec2 } from 'cc';
 
+@ECSComponent('Weapon')
 export class Weapon extends Component {
     public damage: number = 10;
     public fireRate: number = 2;

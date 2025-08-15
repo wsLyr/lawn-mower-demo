@@ -1,9 +1,10 @@
 import { Color, SpriteFrame } from 'cc';
-import { Component } from '@esengine/ecs-framework';
+import { Component, ECSComponent } from '@esengine/ecs-framework';
 
 /**
  * 渲染组件 - Sprite图片渲染
  */
+@ECSComponent('Renderable')
 export class Renderable extends Component {
     public spritePath: string = '';
     public spriteFrame: SpriteFrame | null = null;

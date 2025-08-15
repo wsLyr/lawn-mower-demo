@@ -1,4 +1,4 @@
-import { EntitySystem, Matcher, Entity, Component, Time } from '@esengine/ecs-framework';
+import { EntitySystem, Matcher, Entity, Component, Time, ECSSystem, ECSComponent } from '@esengine/ecs-framework';
 import { Transform, Movement } from '../components';
 import { Vec2 } from 'cc';
 import { EntityTags } from '../EntityTags';
@@ -6,6 +6,7 @@ import { EntityTags } from '../EntityTags';
 /**
  * AI组件 - 标记需要AI控制的实体
  */
+@ECSComponent('AIComponent')
 export class AIComponent extends Component {
     public aiType: string = 'chaser'; // 'chaser', 'patrol', 'guard' 等
     
@@ -18,6 +19,7 @@ export class AIComponent extends Component {
 /**
  * AI系统 - 处理敌人AI行为
  */
+@ECSSystem('AISystem')
 export class AISystem extends EntitySystem {
     
     constructor() {

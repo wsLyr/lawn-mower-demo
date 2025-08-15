@@ -1,8 +1,9 @@
-import { Component } from '@esengine/ecs-framework';
+import { Component, ECSComponent } from '@esengine/ecs-framework';
 
 /**
  * 敌人生成器组件
  */
+@ECSComponent('EnemySpawner')
 export class EnemySpawner extends Component {
     public spawnRate: number = 1.0; // 每秒生成数量
     public spawnDistance: number = 400; // 生成距离

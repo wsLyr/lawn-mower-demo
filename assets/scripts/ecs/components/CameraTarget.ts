@@ -1,8 +1,9 @@
-import { Component } from '@esengine/ecs-framework';
+import { Component, ECSComponent } from '@esengine/ecs-framework';
 
 /**
  * 相机目标组件 - 标记实体为相机跟随目标
  */
+@ECSComponent('CameraTarget')
 export class CameraTarget extends Component {
     public priority: number = 1; // 优先级，数字越大优先级越高
     public smoothing: number = 0.1; // 平滑因子

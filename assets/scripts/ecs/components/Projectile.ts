@@ -1,4 +1,4 @@
-import { Component } from '@esengine/ecs-framework';
+import { Component, ECSComponent } from '@esengine/ecs-framework';
 import { Vec2 } from 'cc';
 
 export enum ProjectileType {
@@ -6,6 +6,7 @@ export enum ProjectileType {
     GRENADE = 'grenade'
 }
 
+@ECSComponent('Projectile')
 export class Projectile extends Component {
     public velocity: Vec2 = new Vec2();
     public damage: number = 10;

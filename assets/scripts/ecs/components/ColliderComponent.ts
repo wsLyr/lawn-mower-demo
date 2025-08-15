@@ -1,9 +1,10 @@
-import { Component } from '@esengine/ecs-framework';
+import { Component, ECSComponent } from '@esengine/ecs-framework';
 import { Vec2 } from 'cc';
 
 /**
  * 碰撞体组件
  */
+@ECSComponent('ColliderComponent')
 export class ColliderComponent extends Component {
     public colliderType: 'circle' | 'rect' = 'circle';
     public radius: number = 10;

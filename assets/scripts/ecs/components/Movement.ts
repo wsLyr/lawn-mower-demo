@@ -1,9 +1,10 @@
-import { Component } from '@esengine/ecs-framework';
+import { Component, ECSComponent } from '@esengine/ecs-framework';
 import { Vec2 } from 'cc';
 
 /**
  * 移动组件 - 控制实体的移动行为
  */
+@ECSComponent('Movement')
 export class Movement extends Component {
     public velocity: Vec2 = new Vec2();
     public maxSpeed: number = 100;

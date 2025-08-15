@@ -1,4 +1,4 @@
-import { Component } from '@esengine/ecs-framework';
+import { Component, ECSComponent } from '@esengine/ecs-framework';
 import { Vec2, Color } from 'cc';
 
 /**
@@ -22,6 +22,7 @@ export class Particle {
 /**
  * 粒子效果组件 - 创建各种粒子效果
  */
+@ECSComponent('ParticleEffect')
 export class ParticleEffect extends Component {
     public particles: Particle[] = [];
     public maxParticles: number = 20;

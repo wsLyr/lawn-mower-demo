@@ -1,9 +1,10 @@
-import { EntitySystem, Matcher, Time } from '@esengine/ecs-framework';
+import { EntitySystem, Matcher, Time, ECSSystem } from '@esengine/ecs-framework';
 import { Transform, Collectible, CollectibleType, ColliderComponent } from '../components';
 import { RenderSystem } from './RenderSystem';
 import { EntityTags } from '../EntityTags';
 import { Vec2 } from 'cc';
 
+@ECSSystem('PowerUpSpawner')
 export class PowerUpSpawner extends EntitySystem {
     private spawnTimer: number = 0;
     private spawnInterval: number = 10.0;

@@ -1,5 +1,6 @@
-import { Component } from '@esengine/ecs-framework';
+import { Component, ECSComponent } from '@esengine/ecs-framework';
 
+@ECSComponent('DamageCooldown')
 export class DamageCooldown extends Component {
     public cooldownTime: number = 1.0;
     public lastDamageTime: number = 0;

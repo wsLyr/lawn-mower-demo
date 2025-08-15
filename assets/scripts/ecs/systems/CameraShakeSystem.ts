@@ -1,4 +1,4 @@
-import { PassiveSystem, Time } from '@esengine/ecs-framework';
+import { PassiveSystem, Time, ECSSystem } from '@esengine/ecs-framework';
 import { director, Vec3, tween } from 'cc';
 
 /**
@@ -15,6 +15,7 @@ interface ShakeEffect {
 /**
  * 屏幕震动系统 - 提供各种震动效果来增强游戏反馈
  */
+@ECSSystem('CameraShakeSystem')
 export class CameraShakeSystem extends PassiveSystem {
     private currentShake: ShakeEffect | null = null;
     private cameraNode: any = null;

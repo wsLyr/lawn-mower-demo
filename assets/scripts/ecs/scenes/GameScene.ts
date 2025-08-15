@@ -27,28 +27,28 @@ export class GameScene extends Scene {
         this.enablePhysics();
         this.createGameContainer();
         
-        this.addSystem(new PlayerInputSystem());
-        this.addSystem(new MovementSystem());
-        this.addSystem(new AISystem());
-        this.addSystem(new WeaponSystem());
-        this.addSystem(new ProjectileSystem());
-        this.addSystem(new AirStrikeSystem());
-        this.addSystem(new PowerUpSpawner());
-        this.addSystem(new CollisionSystem());
-        this.addSystem(new CollectibleSystem());
-        this.addSystem(new HealthSystem());
-        this.addSystem(new ParticleSystem());
-        this.addSystem(new CameraFollowSystem());
-        this.addSystem(new PhysicsSystem());
+        this.addEntityProcessor(new PlayerInputSystem());
+        this.addEntityProcessor(new MovementSystem());
+        this.addEntityProcessor(new AISystem());
+        this.addEntityProcessor(new WeaponSystem());
+        this.addEntityProcessor(new ProjectileSystem());
+        this.addEntityProcessor(new AirStrikeSystem());
+        this.addEntityProcessor(new PowerUpSpawner());
+        this.addEntityProcessor(new CollisionSystem());
+        this.addEntityProcessor(new CollectibleSystem());
+        this.addEntityProcessor(new HealthSystem());
+        this.addEntityProcessor(new ParticleSystem());
+        this.addEntityProcessor(new CameraFollowSystem());
+        this.addEntityProcessor(new PhysicsSystem());
         
         this.renderSystem = new RenderSystem();
-        this.addSystem(this.renderSystem);
+        this.addEntityProcessor(this.renderSystem);
         
         this.enemySpawnSystem = new EnemySpawnSystem();
-        this.addSystem(this.enemySpawnSystem);
+        this.addEntityProcessor(this.enemySpawnSystem);
         
         this.cameraShakeSystem = new CameraShakeSystem();
-        this.addSystem(this.cameraShakeSystem);
+        this.addEntityProcessor(this.cameraShakeSystem);
         
         this.setupSystemDependencies();
         

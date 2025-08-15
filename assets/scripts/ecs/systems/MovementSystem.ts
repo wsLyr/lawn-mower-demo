@@ -1,7 +1,8 @@
-import { EntitySystem, Matcher, Entity, Time } from '@esengine/ecs-framework';
+import { EntitySystem, Matcher, Entity, Time, ECSSystem } from '@esengine/ecs-framework';
 import { Transform, Movement } from '../components';
 import { Vec2 } from 'cc';
 
+@ECSSystem('MovementSystem')
 export class MovementSystem extends EntitySystem {
     private readonly tempVec2 = new Vec2();
     private readonly MOVEMENT_THRESHOLD = 0.1;

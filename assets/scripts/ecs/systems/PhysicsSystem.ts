@@ -1,8 +1,9 @@
-import { EntitySystem, Entity, Matcher, Time } from '@esengine/ecs-framework';
+import { EntitySystem, Entity, Matcher, Time, ECSSystem } from '@esengine/ecs-framework';
 import { Transform } from '../components/Transform';
 import { RigidBody } from '../components/RigidBody';
 import { Vec2 } from 'cc';
 
+@ECSSystem('PhysicsSystem')
 export class PhysicsSystem extends EntitySystem {
     private gravity: Vec2 = new Vec2(0, -500);
     private worldBounds: {

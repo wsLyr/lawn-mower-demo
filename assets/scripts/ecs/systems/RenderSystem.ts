@@ -1,4 +1,4 @@
-import { EntitySystem, Entity, Matcher, Time } from '@esengine/ecs-framework';
+import { EntitySystem, Entity, Matcher, Time, ECSSystem } from '@esengine/ecs-framework';
 import { Node, Sprite, SpriteFrame, resources, ImageAsset, Texture2D, Vec3, Color, Layers, Graphics } from 'cc';
 import { Transform, Renderable, ParticleEffect } from '../components';
 
@@ -114,6 +114,7 @@ class ParticleNodePool {
     }
 }
 
+@ECSSystem('RenderSystem')
 export class RenderSystem extends EntitySystem {
     private gameContainer: Node | null = null;
     private spriteEntities: Map<number, SpriteEntity> = new Map();

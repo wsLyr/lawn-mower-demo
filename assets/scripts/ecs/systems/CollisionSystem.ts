@@ -1,9 +1,10 @@
-import { EntitySystem, Entity, Matcher, Time } from '@esengine/ecs-framework';
+import { EntitySystem, Entity, Matcher, Time, ECSSystem } from '@esengine/ecs-framework';
 import { Transform, ColliderComponent, Health, ParticleEffect, DamageCooldown, Projectile, ProjectileType } from '../components';
 import { PhysicsWorld, CollisionPair } from '../PhysicsWorld';
 import { EntityTags } from '../EntityTags';
 import { Vec2 } from 'cc';
 
+@ECSSystem('CollisionSystem')
 export class CollisionSystem extends EntitySystem {
     private physicsWorld: PhysicsWorld;
     

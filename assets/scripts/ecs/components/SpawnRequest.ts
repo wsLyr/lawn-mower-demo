@@ -1,8 +1,9 @@
-import { Component } from '@esengine/ecs-framework';
+import { Component, ECSComponent } from '@esengine/ecs-framework';
 
 /**
  * 生成请求组件 - 表示请求生成一个实体
  */
+@ECSComponent('SpawnRequest')
 export class SpawnRequest extends Component {
     public entityType: string; // 要生成的实体类型
     public spawnX: number; // 生成X坐标
