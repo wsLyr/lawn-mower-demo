@@ -14,4 +14,7 @@ export * from './EnemySpawner';
 export * from './ExplosionWarning';
 export * from './SpawnRequest';
 export * from './RigidBody';
-export * from './DamageCooldown'; 
+export * from './DamageCooldown';
+
+// 网络组件从共享文件夹导入
+export * from '../networkcomponents'; 

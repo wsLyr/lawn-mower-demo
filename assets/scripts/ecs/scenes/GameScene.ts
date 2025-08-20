@@ -1,5 +1,5 @@
 import { Scene, Core, Time, Entity } from '@esengine/ecs-framework';
-import { Transform, Renderable, Movement, Health, ParticleEffect, Weapon, ColliderComponent, PlayerInput, CameraTarget, EnemySpawner, Collectible, CollectibleType } from '../components';
+import { Transform, Renderable, Movement, Health, ParticleEffect, Weapon, ColliderComponent, PlayerInput, CameraTarget, EnemySpawner, Collectible, CollectibleType, NetworkPlayer } from '../components';
 import { RenderSystem, MovementSystem, WeaponSystem, ProjectileSystem, AirStrikeSystem, PowerUpSpawner, CollisionSystem, CollectibleSystem, PlayerInputSystem, AISystem, CameraFollowSystem, HealthSystem, VectorizedParticleSystem, EnemySpawnSystem, PhysicsSystem, CameraShakeSystem } from '../systems';
 import { director, Node, Color, Vec2, PhysicsSystem2D, Camera, Layers } from 'cc';
 import { ITimer } from '@esengine/ecs-framework';
@@ -17,6 +17,11 @@ export class GameScene extends Scene {
     private vectorizedParticleSystem: VectorizedParticleSystem | null = null;
     private enemySpawnSystem: EnemySpawnSystem | null = null;
     private cameraShakeSystem: CameraShakeSystem | null = null;
+    private playerInputSystem: PlayerInputSystem | null = null;
+    
+    // 网络玩家管理
+    private networkPlayers: Map<string, Entity> = new Map();
+    private ecsManager: any = null;
     
     /**
      * 场景初始化 - ECS框架标准
@@ -28,7 +33,8 @@ export class GameScene extends Scene {
         this.enablePhysics();
         this.createGameContainer();
         
-        this.addEntityProcessor(new PlayerInputSystem());
+        this.playerInputSystem = new PlayerInputSystem();
+        this.addEntityProcessor(this.playerInputSystem);
         this.addEntityProcessor(new MovementSystem());
         this.addEntityProcessor(new AISystem());
         this.addEntityProcessor(new WeaponSystem());
@@ -148,6 +154,163 @@ export class GameScene extends Scene {
         this.playerEntity.addComponent(collider);
     }
     
+    /**
+     * 创建网络玩家（本地玩家）
+     */
+    public createNetworkPlayer(clientId: string, playerName: string, isLocalPlayer: boolean = true): Entity {
+        const entity = this.createEntity(`NetworkPlayer_${clientId}`);
+        entity.tag = EntityTags.PLAYER;
+        
+        // 基础组件
+        const transform = new Transform(0, 0, 0);
+        entity.addComponent(transform);
+        
+        const movement = new Movement(180);
+        entity.addComponent(movement);
+        
+        // 网络玩家组件
+        const networkPlayer = new NetworkPlayer();
+        networkPlayer.init(clientId, isLocalPlayer, playerName);
+        entity.addComponent(networkPlayer);
+        
+        // 只有本地玩家才能接受输入
+        if (isLocalPlayer) {
+            const playerInput = new PlayerInput();
+            entity.addComponent(playerInput);
+            
+            const cameraTarget = new CameraTarget(100);
+            entity.addComponent(cameraTarget);
+            
+            // 设置为主玩家实体
+            this.playerEntity = entity;
+        }
+        
+        const renderable = RenderSystem.createPlayer();
+        entity.addComponent(renderable);
+        
+        const health = new Health(999999);
+        entity.addComponent(health);
+        
+        const weapon = new Weapon(30, 16);
+        weapon.bulletSpeed = 600;
+        weapon.bulletLifeTime = 2;
+        weapon.bulletSize = 4;
+        weapon.pierceCount = 1;
+        weapon.autoFire = isLocalPlayer; // 只有本地玩家自动开火
+        entity.addComponent(weapon);
+        
+        const collider = new ColliderComponent('circle');
+        collider.setSize(15);
+        entity.addComponent(collider);
+        
+        // 存储网络玩家
+        this.networkPlayers.set(clientId, entity);
+        
+        return entity;
+    }
+    
+    /**
+     * 移除网络玩家
+     */
+    public removeNetworkPlayer(clientId: string): void {
+        const entity = this.networkPlayers.get(clientId);
+        if (entity) {
+            entity.destroy();
+            this.networkPlayers.delete(clientId);
+        }
+    }
+    
+    /**
+     * 获取网络玩家
+     */
+    public getNetworkPlayer(clientId: string): Entity | null {
+        return this.networkPlayers.get(clientId) || null;
+    }
+    
+    /**
+     * 设置ECS管理器到输入系统
+     */
+    public setECSManager(ecsManager: any): void {
+        this.ecsManager = ecsManager;
+        if (this.playerInputSystem) {
+            this.playerInputSystem.setECSManager(ecsManager);
+        }
+    }
+    
+    /**
+     * 获取ECS管理器
+     */
+    public getECSManager(): any {
+        return this.ecsManager;
+    }
+    
+    /**
+     * 创建本地玩家
+     */
+    public createLocalPlayer(clientId: string, playerName: string): void {
+        // 删除之前创建的普通玩家（如果有的话）
+        if (this.playerEntity) {
+            this.playerEntity.destroy();
+        }
+        
+        // 创建本地网络玩家
+        this.playerEntity = this.createNetworkPlayer(clientId, playerName, true);
+    }
+    
+    /**
+     * 处理网络消息
+     */
+    public handleNetworkMessage(message: any): void {
+        if (!message.data) return;
+        
+        const { senderId, data } = message;
+        const { gameMessageType, payload } = data;
+        
+        switch (gameMessageType) {
+            case 'player_position':
+                this.handlePlayerPositionUpdate(senderId, payload, data.playerName);
+                break;
+            case 'player_shoot':
+                this.handlePlayerShootEvent(senderId, payload, data.playerName);
+                break;
+            default:
+                console.debug(`未处理的网络消息: ${gameMessageType}`);
+        }
+    }
+    
+    /**
+     * 处理玩家位置更新
+     */
+    private handlePlayerPositionUpdate(senderId: string, payload: any, playerName: string): void {
+        const { position, rotation, velocity } = payload;
+        
+        // 获取或创建远程玩家
+        let playerEntity = this.getNetworkPlayer(senderId);
+        if (!playerEntity) {
+            playerEntity = this.createNetworkPlayer(senderId, playerName || 'Remote Player', false);
+        }
+        
+        if (playerEntity) {
+            const networkPlayer = playerEntity.getComponent(NetworkPlayer);
+            if (networkPlayer) {
+                networkPlayer.updateNetworkTransform(
+                    position,
+                    rotation,
+                    velocity
+                );
+            }
+        }
+    }
+    
+    /**
+     * 处理玩家射击事件
+     */
+    private handlePlayerShootEvent(senderId: string, payload: any, playerName: string): void {
+        console.log(`玩家 ${playerName} 射击:`, payload);
+        // 这里可以创建子弹实体、播放特效等
+        // 可以通过senderId获取射击玩家的实体，然后创建子弹
+    }
+    
     private createEnemySpawner(): void {
         const spawnerEntity = this.createEntity("EnemySpawner");
         spawnerEntity.tag = EntityTags.SPAWNER;
@@ -191,6 +354,10 @@ export class GameScene extends Scene {
         this.vectorizedParticleSystem = null;
         this.enemySpawnSystem = null;
         this.cameraShakeSystem = null;
+        this.playerInputSystem = null;
+        
+        // 清理网络玩家
+        this.networkPlayers.clear();
         
         super.unload();
     }
