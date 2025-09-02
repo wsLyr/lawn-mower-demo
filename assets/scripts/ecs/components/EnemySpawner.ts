@@ -21,11 +21,11 @@ export class EnemySpawner extends Component {
     /**
      * 检查是否可以生成敌人
      */
-    public canSpawn(currentEnemyCount: number, deltaTime: number, globalMaxEnemies: number): boolean {
+    public canSpawn(deltaTime: number): boolean {
         this.spawnTimer += deltaTime;
         const spawnInterval = 1.0 / this.spawnRate;
         
-        if (this.spawnTimer >= spawnInterval && currentEnemyCount < globalMaxEnemies) {
+        if (this.spawnTimer >= spawnInterval) {
             this.spawnTimer = 0;
             return true;
         }

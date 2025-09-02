@@ -10,6 +10,7 @@ export class ECSConsoleDebug {
     private ecsManager: ECSManager | null = null;
     private updateInterval: number = 0;
     private isAutoUpdate: boolean = false;
+    private removedSystems: Map<string, any> = new Map();
 
     private constructor() {}
 
@@ -57,6 +58,8 @@ export class ECSConsoleDebug {
         window.ecsStopWatch = () => this.stopAutoUpdate();
         // @ts-ignore
         window.ecsClear = () => console.clear();
+        // @ts-ignore
+        window.ecsRemoveSystem = (systemName: string) => this.removeSystem(systemName);
     }
 
     /**
@@ -80,13 +83,17 @@ ECS调试控制台命令帮助
   ecsStartWatch(间隔) - 开始自动更新显示(默认2秒)
   ecsStopWatch()      - 停止自动更新
   
+系统管理:
+  ecsRemoveSystem(系统名) - 移除指定系统
+  
 工具:
   ecsClear()          - 清空控制台
   ecsHelp()           - 显示此帮助信息
 
 示例:
-  ecsStartWatch(1)    - 每1秒自动显示统计信息
-  ecsEntities()       - 查看当前所有实体
+  ecsRemoveSystem('CollisionSystem')  - 移除碰撞系统
+  ecsStartWatch(1)                    - 每1秒监控性能
+  ecsPerformance()                    - 查看当前性能指标
         `);
     }
 
@@ -111,14 +118,6 @@ ECS系统总览
 系统数量: ${systemCount}
         `);
 
-        // 显示组件存储效率
-        const sceneImpl = scene as Scene;
-        if (sceneImpl.getStats) {
-            const stats = sceneImpl.getStats();
-            const { efficiency, activeTypes } = this.calculateStorageEfficiency(stats.componentStorageStats);
-            
-            console.log(`存储效率: ${efficiency.toFixed(1)}% (${activeTypes}个组件类型)`);
-        }
 
         // 网络状态
         if (this.ecsManager) {
@@ -236,28 +235,8 @@ ECS系统总览
         console.log(`实体数量: ${scene.entities.count}`);
         console.log(`系统数量: ${scene.entityProcessors.count}`);
 
-        // 存储效率（稀疏集合优化后的关键指标）
-        const sceneImpl = scene as Scene;
-        if (sceneImpl.getStats) {
-            const stats = sceneImpl.getStats();
-            const { efficiency, totalSlots, usedSlots } = this.calculateStorageEfficiency(stats.componentStorageStats);
-            
-            console.log(`存储效率: ${efficiency.toFixed(1)}%`);
-            console.log(`存储槽位: ${usedSlots}/${totalSlots}`);
-            
-            // 显示零碎片的优势
-            let totalFragmentation = 0;
-            let fragmentedTypes = 0;
-            
-            for (const [_, componentStats] of stats.componentStorageStats) {
-                totalFragmentation += componentStats.fragmentation || 0;
-                if (componentStats.fragmentation > 0) {
-                    fragmentedTypes++;
-                }
-            }
-            
-            console.log(`碎片率: ${totalFragmentation.toFixed(2)}% (${fragmentedTypes}个类型有碎片)`);
-        }
+        // 系统性能排名
+        this.showSystemPerformance();
 
         // 网络延迟
         if (this.ecsManager) {
@@ -333,34 +312,37 @@ ECS系统总览
     }
 
     /**
-     * 计算存储效率
+     * 显示系统性能排名
      */
-    private calculateStorageEfficiency(componentStats: Map<string, any>): {
-        efficiency: number;
-        activeTypes: number;
-        totalSlots: number;
-        usedSlots: number;
-    } {
-        let totalSlots = 0;
-        let usedSlots = 0;
-        let activeTypes = 0;
-        
-        for (const [_, stats] of componentStats) {
-            if (stats.usedSlots > 0) {
-                activeTypes++;
-                totalSlots += stats.totalSlots || 0;
-                usedSlots += stats.usedSlots || 0;
-            }
-        }
-        
-        const efficiency = totalSlots > 0 ? (usedSlots / totalSlots) * 100 : 100;
-        
-        return {
-            efficiency,
-            activeTypes,
-            totalSlots,
-            usedSlots
-        };
+    private showSystemPerformance(): void {
+        const scene = Core.scene;
+        if (!scene) return;
+
+        const systems = scene.entityProcessors.processors;
+        const performanceData: Array<{name: string, updateTime: number, entityCount: number}> = [];
+
+        // 收集系统性能数据
+        systems.forEach(system => {
+            const systemName = system.constructor.name;
+            const updateTime = (system as any).lastUpdateTime || 0;
+            const entityCount = (system as any)._entities?.length || 0;
+            
+            performanceData.push({
+                name: systemName,
+                updateTime,
+                entityCount
+            });
+        });
+
+        // 按更新时间排序
+        performanceData.sort((a, b) => b.updateTime - a.updateTime);
+
+        console.log(`
+系统性能排名 (按耗时排序):`);
+        performanceData.forEach((data, index) => {
+            const timeStr = data.updateTime > 0 ? `${data.updateTime.toFixed(2)}ms` : '未记录';
+            console.log(`${index + 1}. ${data.name}: ${timeStr} (${data.entityCount}个实体)`);
+        });
     }
 
     /**
@@ -390,7 +372,36 @@ ECS系统总览
         delete window.ecsStopWatch;
         // @ts-ignore
         delete window.ecsClear;
+        // @ts-ignore
+        delete window.ecsRemoveSystem;
         
         console.log('ECS控制台调试工具已清理');
+    }
+
+    /**
+     * 移除指定系统
+     */
+    private removeSystem(systemName: string): void {
+        const scene = Core.scene;
+        if (!scene) {
+            console.warn('ECS未初始化或场景不存在');
+            return;
+        }
+
+        const systems = scene.entityProcessors.processors;
+        const systemToRemove = systems.find(sys => sys.constructor.name === systemName);
+        
+        if (!systemToRemove) {
+            console.warn(`未找到系统: ${systemName}`);
+            console.log('可用系统列表:');
+            systems.forEach((sys, index) => {
+                console.log(`  ${index + 1}. ${sys.constructor.name}`);
+            });
+            return;
+        }
+
+        scene.removeEntityProcessor(systemToRemove);
+        console.log(`已移除系统: ${systemName}`);
+        console.log(`当前系统数量: ${scene.entityProcessors.count}`);
     }
 }
