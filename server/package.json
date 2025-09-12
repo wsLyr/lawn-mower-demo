@@ -5,9 +5,12 @@
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",
-    "dev": "ts-node index.ts",
-    "build": "tsc",
-    "test": "jest"
+    "dev": "npm run sync && ts-node index.ts",
+    "build": "npm run sync && tsc",
+    "test": "jest",
+    "sync": "node scripts/sync-components.js",
+    "prebuild": "npm run sync",
+    "predev": "npm run sync"
   },
   "dependencies": {
     "@esengine/ecs-framework": "latest",
