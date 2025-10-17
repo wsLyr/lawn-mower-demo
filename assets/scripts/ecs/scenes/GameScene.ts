@@ -9,7 +9,6 @@ import { EntityTags } from '../EntityTags';
  * 游戏场景
  */
 export class GameScene extends Scene {
-    
     private playerEntity: Entity = null;
     private gameContainer: Node = null;
     private mainCamera: Camera | null = null;
@@ -18,7 +17,7 @@ export class GameScene extends Scene {
     private enemySpawnSystem: EnemySpawnSystem | null = null;
     private cameraShakeSystem: CameraShakeSystem | null = null;
     private playerInputSystem: PlayerInputSystem | null = null;
-    
+
     // 网络玩家管理
     private networkPlayers: Map<string, Entity> = new Map();
     private ecsManager: any = null;
@@ -96,19 +95,19 @@ export class GameScene extends Scene {
     private setupSystemDependencies(): void {
         if (this.gameContainer) {
             this.renderSystem?.setGameContainer(this.gameContainer);
-            
-            const weaponSystem = this.getEntityProcessor(WeaponSystem);
+
+            const weaponSystem = this.services.resolve(WeaponSystem);
             if (weaponSystem) {
                 weaponSystem.setGameContainer(this.gameContainer);
             }
-            
+
             if (this.vectorizedParticleSystem) {
                 this.vectorizedParticleSystem.setGameContainer(this.gameContainer);
             }
         }
-        
+
         if (this.mainCamera) {
-            const cameraFollowSystem = this.getEntityProcessor(CameraFollowSystem);
+            const cameraFollowSystem = this.services.resolve(CameraFollowSystem);
             if (cameraFollowSystem) {
                 cameraFollowSystem.setCamera(this.mainCamera);
             }

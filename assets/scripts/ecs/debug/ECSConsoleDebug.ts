@@ -108,7 +108,7 @@ ECS调试控制台命令帮助
         }
 
         const entityCount = scene.entities.count;
-        const systemCount = scene.entityProcessors.count;
+        const systemCount = scene.systems.length;
         
         console.log(`
 ECS系统总览
@@ -163,7 +163,7 @@ ECS系统总览
             return;
         }
 
-        const systems = scene.entityProcessors.processors;
+        const systems = scene.systems;
         console.log(`
 系统列表 (共${systems.length}个)
 ═════════════════════════`);
@@ -233,7 +233,7 @@ ECS系统总览
 
         // 基础指标
         console.log(`实体数量: ${scene.entities.count}`);
-        console.log(`系统数量: ${scene.entityProcessors.count}`);
+        console.log(`系统数量: ${scene.systems.length}`);
 
         // 系统性能排名
         this.showSystemPerformance();
@@ -318,7 +318,7 @@ ECS系统总览
         const scene = Core.scene;
         if (!scene) return;
 
-        const systems = scene.entityProcessors.processors;
+        const systems = scene.systems;
         const performanceData: Array<{name: string, updateTime: number, entityCount: number}> = [];
 
         // 收集系统性能数据
@@ -388,7 +388,7 @@ ECS系统总览
             return;
         }
 
-        const systems = scene.entityProcessors.processors;
+        const systems = scene.systems;
         const systemToRemove = systems.find(sys => sys.constructor.name === systemName);
         
         if (!systemToRemove) {
@@ -402,6 +402,6 @@ ECS系统总览
 
         scene.removeEntityProcessor(systemToRemove);
         console.log(`已移除系统: ${systemName}`);
-        console.log(`当前系统数量: ${scene.entityProcessors.count}`);
+        console.log(`当前系统数量: ${scene.systems.length}`);
     }
 }

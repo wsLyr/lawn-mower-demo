@@ -67,10 +67,7 @@ export class ECSManager extends Component {
             }
             
             // 创建游戏场景
-            // 传入 Core 的 PerformanceMonitor，确保 Scene 中的 System 性能数据能被收集
-            this.gameScene = new GameScene({
-                performanceMonitor: Core.Instance._performanceMonitor
-            });
+            this.gameScene = new GameScene();
             Core.setScene(this.gameScene);
             
             // 设置ECS管理器到游戏场景

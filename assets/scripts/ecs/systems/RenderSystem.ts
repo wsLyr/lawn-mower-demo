@@ -119,12 +119,12 @@ export class RenderSystem extends EntitySystem {
         this.creatingEntities.delete(entity.id);
     }
 
-    public onStart(): void {
+    protected onInitialize(): void {
         this.nodePool.preWarm(50);
         this.preloadSprites();
     }
 
-    public onDestroy(): void {
+    protected onDestroy(): void {
         this.spriteEntities.forEach(spriteEntity => {
             this.nodePool.releaseNode(spriteEntity.node);
         });
