@@ -2,7 +2,7 @@ import { Scene, Core, Time, Entity } from '@esengine/ecs-framework';
 import { Transform, Renderable, Movement, Health, ParticleEffect, Weapon, ColliderComponent, PlayerInput, CameraTarget, EnemySpawner, Collectible, CollectibleType, NetworkPlayer } from '../components';
 import { RenderSystem, MovementSystem, WeaponSystem, ProjectileSystem, AirStrikeSystem, PowerUpSpawner, CollisionSystem, CollectibleSystem, PlayerInputSystem, AISystem, CameraFollowSystem, HealthSystem, VectorizedParticleSystem, EnemySpawnSystem, PhysicsSystem, CameraShakeSystem } from '../systems';
 import { director, Node, Color, Vec2, PhysicsSystem2D, Camera, Layers } from 'cc';
-import { ITimer } from '@esengine/ecs-framework';
+import { ITimer } from '@esengine/ecs-framework'; 
 import { EntityTags } from '../EntityTags';
 
 /**

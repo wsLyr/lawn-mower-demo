@@ -1,0 +1,88 @@
+{
+  "package_version": 2,
+  "version": "1.1.5",
+  "name": "cinestation",
+  "description": "i18n:cinestation.description",
+  "main": "./dist/main.js",
+  "devDependencies": {
+    "@types/node": "^16.11.9",
+    "typescript": "^4.3.4"
+  },
+  "author": "xuanye",
+  "editor": ">=3.7.3",
+  "scripts": {
+    "build": "tsc -b",
+    "watch": "tsc -w"
+  },
+  "contributions": {
+    "scene": {
+      "script": "./dist/scene.js"
+    },
+    "hierarchy": {
+      "menu": {
+        "methods": "./dist/main.js",
+        "createVirtualCamera": "createVirtualCamera"
+      }
+    },
+    "menu": [
+      {
+        "path": "i18n:menu.extension/Cinestation",
+        "label": "Virtual Camera",
+        "message": "create-virtual-camera"
+      },
+      {
+        "path": "i18n:menu.extension/Cinestation",
+        "label": "Follow Camera",
+        "message": "create-follow-camera"
+      },
+      {
+        "path": "i18n:menu.extension/Cinestation",
+        "label": "FreeLook Camera",
+        "message": "create-freelook-camera"
+      },
+      {
+        "path": "i18n:menu.extension/Cinestation",
+        "label": "Dolly Track Camera",
+        "message": "create-tracked-camera"
+      },
+      {
+        "path": "i18n:menu.extension/Cinestation",
+        "label": "Install Examples",
+        "message": "install-examples"
+      }
+    ],
+    "messages": {
+      "selection:select": {
+        "methods": [
+          "selectNode"
+        ]
+      },
+      "create-virtual-camera": {
+        "methods": [
+          "createVirtualCamera"
+        ]
+      },
+      "create-follow-camera": {
+        "methods": [
+          "createFollowCamera"
+        ]
+      },
+      "create-freelook-camera": {
+        "methods": [
+          "createFreeLookCamera"
+        ]
+      },
+      "create-tracked-camera": {
+        "methods": [
+          "createTrackedCamera"
+        ]
+      },
+      "install-examples": {
+        "methods": [
+          "installExamples"
+        ]
+      }
+    }
+  },
+  "_storeId": "c2cf1d542cf7e5bda76f5a0b3e2db3ef"
+}

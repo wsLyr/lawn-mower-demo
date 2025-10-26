@@ -1,0 +1,102 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.unload = exports.load = exports.methods = void 0;
+function _createVirtualCamera() {
+    const js = cc.js;
+    const scene = cc.director.getScene();
+    let camera = scene.getComponentInChildren(cc.Camera);
+    if (camera == undefined) {
+        console.error("not find Camera");
+        return;
+    }
+    if (camera.node.getComponent(js.getClassByName("CinestationBrain")) == undefined) {
+        camera.node.addComponent(js.getClassByName("CinestationBrain"));
+    }
+    let editorCamera = cce.Camera.camera;
+    let vcams = scene.getComponentsInChildren(js.getClassByName("VirtualCamera"));
+    let cameraNode = new cc.Node("VCam" + vcams.length);
+    scene.addChild(cameraNode);
+    cameraNode.worldPosition = editorCamera.node.worldPosition;
+    cameraNode.worldRotation = editorCamera.node.worldRotation;
+    let vcam = cameraNode.addComponent(js.getClassByName("VirtualCamera"));
+    let lens = vcam.lens;
+    lens.fov = camera.fov;
+    lens.near = camera.near;
+    lens.far = camera.far;
+    return vcam;
+}
+function _createTrackPath() {
+    const js = cc.js;
+    const scene = cc.director.getScene();
+    let tracks = scene.getComponentsInChildren(js.getClassByName("CinestationSmoothPath"));
+    let editorCamera = cce.Camera.camera;
+    let trackNode = new cc.Node("DollyTrack" + tracks.length);
+    scene.addChild(trackNode);
+    let path = trackNode.addComponent(js.getClassByName("CinestationSmoothPath"));
+    trackNode.worldPosition = editorCamera.node.worldPosition;
+    trackNode.addChild(new cc.Node("Node0"));
+    trackNode.addChild(new cc.Node("Node1"));
+    path._updateControlPoints();
+    return path;
+}
+/**
+ * @en Registration method for the main process of Extension
+ * @zh 为扩展的主进程的注册方法
+ */
+exports.methods = {
+    createVirtualCamera() {
+        _createVirtualCamera();
+    },
+    createTrackedCamera() {
+        let vcam = _createVirtualCamera();
+        vcam.body.type = 2;
+        vcam.body.tracked.path = _createTrackPath();
+        vcam.aim.type = 1;
+    },
+    createFreeLookCamera() {
+        let vcam = _createVirtualCamera();
+        vcam.body.type = 1;
+        vcam.aim.type = 2;
+    },
+    createFollowCamera() {
+        let vcam = _createVirtualCamera();
+        vcam.body.type = 3;
+        vcam.aim.type = 1;
+    },
+    selectNode(uuid) {
+        const js = cc.js;
+        const scene = cc.director.getScene();
+        let vcams = scene.getComponentsInChildren(js.getClassByName("VirtualCamera"));
+        let selected = null;
+        for (let i = 0; i < vcams.length; i++) {
+            let vcam = vcams[i];
+            if (vcam.node.uuid === uuid) {
+                vcam.visible = true;
+                vcam._composerChanged = true;
+                vcam._editorChanged = true;
+                selected = vcam;
+            }
+            else {
+                vcam.visible = false;
+            }
+        }
+        let brain = scene.getComponentInChildren(js.getClassByName("CinestationBrain"));
+        if (brain) {
+            brain.__selectedCamera = selected;
+        }
+    },
+};
+/**
+ * @en Hooks triggered after extension loading is complete
+ * @zh 扩展加载完成后触发的钩子
+ */
+const load = function () {
+};
+exports.load = load;
+/**
+ * @en Hooks triggered after extension uninstallation is complete
+ * @zh 扩展卸载完成后触发的钩子
+ */
+const unload = function () {
+};
+exports.unload = unload;

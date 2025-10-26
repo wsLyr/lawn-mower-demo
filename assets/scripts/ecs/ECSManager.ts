@@ -6,7 +6,7 @@ import { NetworkClient, NetworkClientConfig, MessageType } from '@esengine/netwo
 const { ccclass, property } = _decorator;
 
 @ccclass('ECSManager')
-export class ECSManager extends Component {
+export class ECSManager extends Component { 
     
     @property({
         tooltip: '是否启用调试模式'
