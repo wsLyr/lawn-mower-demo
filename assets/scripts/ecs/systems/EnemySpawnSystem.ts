@@ -11,26 +11,19 @@ import { EntityTags } from '../EntityTags';
  */
 @ECSSystem('EnemySpawnSystem')
 export class EnemySpawnSystem extends EntitySystem {
-    private static readonly MAX_ENEMIES = 1000;
     
     constructor() {
         super(Matcher.all(EnemySpawner));
     }
     
     protected process(entities: Entity[]): void {
-        const currentEnemyCount = this.scene.findEntitiesByTag(EntityTags.ENEMY).length;
-        
-        if (currentEnemyCount >= EnemySpawnSystem.MAX_ENEMIES) {
-            return;
-        }
-        
         const deltaTime = Time.deltaTime;
         
         for (const entity of entities) {
             const spawner = entity.getComponent(EnemySpawner);
             if (!spawner) continue;
             
-            while (spawner.canSpawn(currentEnemyCount, deltaTime, EnemySpawnSystem.MAX_ENEMIES)) {
+            while (spawner.canSpawn(deltaTime)) {
                 this.spawnEnemy(spawner);
                 break;
             }

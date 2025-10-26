@@ -96,7 +96,7 @@ export class PlayerInputSystem extends EntitySystem {
         });
         
         if (!success) {
-            console.warn('发送输入消息失败');
+            this.logger.warn('发送输入消息失败');
         }
     }
     
@@ -151,7 +151,7 @@ export class PlayerInputSystem extends EntitySystem {
     /**
      * 系统销毁时清理事件监听
      */
-    public onRemoved(): void {
+    protected onDestroy(): void {
         input.off(Input.EventType.KEY_DOWN, this.onKeyDown, this);
         input.off(Input.EventType.KEY_UP, this.onKeyUp, this);
     }

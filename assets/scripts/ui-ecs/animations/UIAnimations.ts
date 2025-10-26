@@ -1,4 +1,4 @@
-import { Node, tween, v3 } from 'cc';
+import { Node, tween, UIOpacity, v3 } from 'cc';
 import { UIAnimationFunction } from '@esengine/mvvm-ui-framework';
 
 /**
@@ -14,7 +14,7 @@ export class UIAnimations {
         return new Promise<void>((resolve) => {
             // 设置初始状态
             view.setScale(v3(0, 0, 0));
-            
+
             // 创建缓动动画
             tween(view)
                 .to(0.1, { scale: v3(1.01, 1.01, 1.01) })
@@ -46,9 +46,12 @@ export class UIAnimations {
     public static fadeIn: UIAnimationFunction<Node> = async (view: Node): Promise<void> => {
         return new Promise<void>((resolve) => {
             // 设置初始透明度
-            view.getComponent('UIOpacity')?.setOpacity(0);
-            
-            tween(view.getComponent('UIOpacity'))
+            const uiOpacity = view.getComponent(UIOpacity);
+            if (uiOpacity) {
+                uiOpacity.opacity = 0;
+            }
+
+            tween(uiOpacity)
                 .to(0.3, { opacity: 255 })
                 .call(() => {
                     resolve();
@@ -62,7 +65,8 @@ export class UIAnimations {
      */
     public static fadeOut: UIAnimationFunction<Node> = async (view: Node): Promise<void> => {
         return new Promise<void>((resolve) => {
-            tween(view.getComponent('UIOpacity'))
+            const uiOpacity = view.getComponent(UIOpacity);
+            tween(uiOpacity)
                 .to(0.3, { opacity: 0 })
                 .call(() => {
                     resolve();
@@ -78,7 +82,7 @@ export class UIAnimations {
         return new Promise<void>((resolve) => {
             const originalY = view.position.y;
             view.setPosition(view.position.x, originalY + 500, view.position.z);
-            
+
             tween(view)
                 .to(0.3, { position: v3(view.position.x, originalY, view.position.z) })
                 .call(() => {
@@ -94,7 +98,7 @@ export class UIAnimations {
     public static slideOutToTop: UIAnimationFunction<Node> = async (view: Node): Promise<void> => {
         return new Promise<void>((resolve) => {
             const currentY = view.position.y;
-            
+
             tween(view)
                 .to(0.3, { position: v3(view.position.x, currentY + 500, view.position.z) })
                 .call(() => {
@@ -111,11 +115,11 @@ export class UIAnimations {
         return new Promise<void>((resolve) => {
             // 设置初始状态
             view.setScale(v3(0, 0, 0));
-            const uiOpacity = view.getComponent('UIOpacity');
+            const uiOpacity = view.getComponent(UIOpacity);
             if (uiOpacity) {
                 uiOpacity.opacity = 0;
             }
-            
+
             // 同时执行缩放和淡入动画
             Promise.all([
                 new Promise<void>((resolveScale) => {

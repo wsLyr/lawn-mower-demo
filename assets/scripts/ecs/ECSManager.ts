@@ -2,6 +2,7 @@ import { Core, createLogger } from '@esengine/ecs-framework';
 import { Component, _decorator } from 'cc';
 import { GameScene } from './scenes/GameScene';
 import { NetworkClient, NetworkClientConfig, MessageType } from '@esengine/network-client';
+import { ECSConsoleDebug } from './debug/ECSConsoleDebug';
 
 const { ccclass, property } = _decorator;
 
@@ -32,6 +33,7 @@ export class ECSManager extends Component {
     private isInitialized: boolean = false;
     private networkClient: NetworkClient | null = null;
     private gameScene: GameScene | null = null;
+    private consoleDebug: ECSConsoleDebug | null = null;
     
     async start() {
         await this.initializeECS();
@@ -74,6 +76,12 @@ export class ECSManager extends Component {
             // 如果启用网络，初始化网络管理器
             if (this.enableNetwork) {
                 await this.initializeNetwork();
+            }
+
+            // 如果启用调试模式，初始化控制台调试工具
+            if (this.debugMode) {
+                this.consoleDebug = ECSConsoleDebug.getInstance();
+                this.consoleDebug.init(this);
             }
             
             this.isInitialized = true;
@@ -212,6 +220,12 @@ export class ECSManager extends Component {
             if (this.networkClient) {
                 await this.networkClient.destroy();
                 this.networkClient = null;
+            }
+
+            // 清理控制台调试工具
+            if (this.consoleDebug) {
+                this.consoleDebug.destroy();
+                this.consoleDebug = null;
             }
             
             // ECS框架会自动处理场景清理

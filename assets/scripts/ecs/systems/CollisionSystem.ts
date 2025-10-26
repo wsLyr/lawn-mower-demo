@@ -14,7 +14,7 @@ export class CollisionSystem extends EntitySystem {
     }
     
     protected onInitialize(): void {
-        this.scene.eventSystem.on('grenade:explode', this.onGrenadeExplode.bind(this));
+        this.addEventListener('grenade:explode', this.onGrenadeExplode.bind(this));
     }
     
     private onGrenadeExplode(data: { x: number, y: number, projectile: Projectile }): void {

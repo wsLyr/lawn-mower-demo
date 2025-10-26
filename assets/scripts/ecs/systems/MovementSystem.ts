@@ -13,8 +13,7 @@ export class MovementSystem extends EntitySystem {
         super(Matcher.all(Transform, Movement));
     }
     
-    public onAddedToScene(): void {
-        super.onAddedToScene();
+    protected onInitialize(): void {
         // 获取ECS管理器引用
         if (this.scene && (this.scene as any).getECSManager) {
             this.ecsManager = (this.scene as any).getECSManager();
@@ -157,7 +156,7 @@ export class MovementSystem extends EntitySystem {
             );
             
             if (!success) {
-                console.warn(`玩家 ${networkPlayer.clientId} 位置同步发送失败`);
+                this.logger.warn(`玩家 ${networkPlayer.clientId} 位置同步发送失败`);
             }
         }
     }
